@@ -16,7 +16,7 @@ const COLUMN_PROP_KEYS = [
 ] as const
 
 /** 提取可透传给 el-table-column 的属性 */
-export function pickColumnProps(column: TableColumn) {
+export function pickColumnProps<T>(column: TableColumn<T>) {
   const result: Record<string, unknown> = {}
   COLUMN_PROP_KEYS.forEach((key) => {
     if (column[key] !== undefined) {
@@ -27,7 +27,7 @@ export function pickColumnProps(column: TableColumn) {
 }
 
 /** 过滤隐藏列；selection / index 由 normalizeColumns 统一插入 */
-export function useVisibleColumns(columns: MaybeRefOrGetter<TableColumn[]>) {
+export function useVisibleColumns<T>(columns: MaybeRefOrGetter<TableColumn<T>[]>) {
   return computed(() =>
     toValue(columns).filter((col) => {
       if (col.hidden) return false
@@ -44,7 +44,7 @@ interface NormalizeOptions {
 }
 
 /** 按需在列头插入 selection / index */
-export function normalizeColumns(columns: TableColumn[], options: NormalizeOptions = {}) {
+export function normalizeColumns<T>(columns: TableColumn<T>[], options: NormalizeOptions = {}) {
   const { showIndex = false, showSelection = false, indexLabel = "序号" } = options
   const result = [...columns]
 
