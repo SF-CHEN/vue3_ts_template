@@ -1,111 +1,77 @@
-import type { AxiosInstance, AxiosRequestConfig } from "axios"
+import type { AxiosRequestConfig } from "axios"
 import { getToken } from "@@/utils/local-storage"
 import axios from "axios"
-import { get, merge } from "lodash-es"
 import { useUserStore } from "@/pinia/stores/user"
 
-/** 创建请求实例 */
-function createInstance() {
-  const instance = axios.create()
+const HTTP_ERROR_MESSAGES: Partial<Record<number, string>> = {
+  400: "请求错误",
+  401: "未授权",
+  403: "拒绝访问",
+  404: "请求地址出错",
+  408: "请求超时",
+  500: "服务器内部错误",
+  501: "服务未实现",
+  502: "网关错误",
+  503: "服务不可用",
+  504: "网关超时",
+  505: "HTTP 版本不受支持"
+}
 
-  instance.interceptors.request.use(
-    config => config,
-    error => Promise.reject(error)
-  )
+const instance = axios.create({
+  baseURL: import.meta.env.VITE_BASE_URL,
+  timeout: 30_000,
+  withCredentials: false
+})
 
-  instance.interceptors.response.use(
-    (response) => {
-      const apiData = response.data
-      const responseType = response.config.responseType
-      if (responseType === "blob" || responseType === "arraybuffer") return apiData
+instance.interceptors.request.use((config) => {
+  const token = getToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
 
-      const code = apiData.code
-      if (code === undefined) {
-        ElMessage.error("非本系统的接口")
-        return Promise.reject(new Error("非本系统的接口"))
-      }
+instance.interceptors.response.use(
+  (response) => {
+    const responseType = response.config.responseType
+    if (responseType === "blob" || responseType === "arraybuffer") {
+      return response.data
+    }
 
-      switch (code) {
-        case 0:
-          return apiData
-        case 401:
-          useUserStore().expireSession()
-          return Promise.reject(new Error(apiData.message || "未授权"))
-        default:
-          ElMessage.error(apiData.message || "Error")
-          return Promise.reject(apiData)
-      }
-    },
-    (error) => {
-      const status = get(error, "response.status")
-      const message = get(error, "response.data.message")
-      switch (status) {
-        case 400:
-          error.message = "请求错误"
-          break
-        case 401:
-          error.message = message || "未授权"
-          useUserStore().expireSession()
-          break
-        case 403:
-          error.message = message || "拒绝访问"
-          break
-        case 404:
-          error.message = "请求地址出错"
-          break
-        case 408:
-          error.message = "请求超时"
-          break
-        case 500:
-          error.message = "服务器内部错误"
-          break
-        case 501:
-          error.message = "服务未实现"
-          break
-        case 502:
-          error.message = "网关错误"
-          break
-        case 503:
-          error.message = "服务不可用"
-          break
-        case 504:
-          error.message = "网关超时"
-          break
-        case 505:
-          error.message = "HTTP 版本不受支持"
-          break
-      }
+    const apiData = response.data as { code?: number, message?: string }
+    if (apiData.code === undefined) {
+      const error = new Error("非本系统的接口")
       ElMessage.error(error.message)
       return Promise.reject(error)
     }
-  )
-  return instance
-}
 
-/** 创建请求方法 */
-function createRequest(instance: AxiosInstance) {
-  return <T>(config: AxiosRequestConfig): Promise<T> => {
-    const token = getToken()
-    const defaultConfig: AxiosRequestConfig = {
-      baseURL: import.meta.env.VITE_BASE_URL,
-      headers: {
-        "Authorization": token ? `Bearer ${token}` : undefined,
-        "Content-Type": "application/json"
-      },
-      timeout: 30 * 1000,
-      withCredentials: false
+    if (apiData.code === 0) return apiData
+
+    if (apiData.code === 401) {
+      useUserStore().expireSession()
     }
-    const mergeConfig = merge({}, defaultConfig, config)
-    if (config.data instanceof FormData) {
-      mergeConfig.data = config.data
-      if (mergeConfig.headers) {
-        delete (mergeConfig.headers as Record<string, unknown>)["Content-Type"]
-      }
+
+    const error = new Error(apiData.message || "请求失败")
+    ElMessage.error(error.message)
+    return Promise.reject(error)
+  },
+  (error: unknown) => {
+    if (!axios.isAxiosError<{ message?: string }>(error)) {
+      ElMessage.error("请求失败")
+      return Promise.reject(error)
     }
-    return instance(mergeConfig)
+
+    const status = error.response?.status
+    const serverMessage = error.response?.data?.message
+    error.message = serverMessage || (status ? HTTP_ERROR_MESSAGES[status] : undefined) || error.message || "请求失败"
+
+    if (status === 401) {
+      useUserStore().expireSession()
+    }
+
+    ElMessage.error(error.message)
+    return Promise.reject(error)
   }
+)
+
+export function request<T>(config: AxiosRequestConfig): Promise<T> {
+  return instance.request<unknown, T>(config)
 }
-
-const instance = createInstance()
-
-export const request = createRequest(instance)
