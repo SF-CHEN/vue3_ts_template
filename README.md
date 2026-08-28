@@ -47,6 +47,8 @@ pnpm api:doc            # 生成接口文档摘要
 
 - 先找已有相似实现，再新增代码。
 - 普通需求优先控制在 1～3 个文件内完成。
+- 普通 CRUD 表单优先直接使用 Element Plus；只有动态/schema 驱动表单再使用 `CustomForm`。
+- `CustomTable` 只负责常规列、loading、selection/index 和 pagination；特殊单元格使用 Vue slot。
 - 不为未来需求提前抽象，不默认新增 Service / Repository / Factory / Registry / Event Bus 等层。
 - `eslint.config.js` 是代码风格的唯一事实来源，不在提示词里重复维护格式规则。
 - 代码完成后先执行 ESLint 自动修复，再执行 TypeScript 检查；`pnpm check` 通过后再视为完成。
@@ -148,9 +150,10 @@ meta: {
 
 1. 在 `src/pages/<domain>/` 新建页面。
 2. 在 `src/router/index.ts` 的 `dynamicRoutes` 注册路由与 `roles` / `permissions`。
-3. 接口优先用 Swagger 生成（`@@/apis/<module>`）；页面 UI 扩展类型放页面旁 `types/`。
-4. 需要共享状态时新增 `src/pinia/stores/`。
-5. CRUD 可参考 `src/pages/demo/article`。
+3. 接口与后端契约类型优先直接使用 Swagger 生成的 `@@/apis/<module>` 和 `@@/apis/types/<module>`；不要为了转发类型额外创建 `types/index.ts`。
+4. 页面确实有额外 UI 类型时，再在页面目录放 `types.ts`；简单类型直接写在页面中即可。
+5. 只有跨页面共享状态时才新增 `src/pinia/stores/`。
+6. CRUD 可参考 `src/pages/demo/article`，其默认写法是普通 Element Plus 表单 + `CustomTable` + slot。
 
 ## 版本与升级
 
