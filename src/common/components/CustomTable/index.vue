@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts" generic="T extends object">
 import type { TableInstance } from "element-plus"
 import type { TableColumn, TablePagination, TablePaginationKeys } from "./types"
 import { computed, nextTick, useAttrs, useTemplateRef } from "vue"
@@ -12,8 +12,8 @@ defineOptions({
 })
 
 const props = withDefaults(defineProps<{
-  data?: any[]
-  columns: TableColumn<any>[]
+  data?: T[]
+  columns: TableColumn<T>[]
   pagination?: TablePagination
   paginationKeys?: TablePaginationKeys
   pageConfig?: Record<string, unknown>
@@ -69,16 +69,24 @@ const { page, size, total, onPagination } = useTablePagination(
 )
 const tableRef = useTemplateRef<TableInstance>("tableRef")
 
-function columnKey(column: TableColumn) {
+function columnKey(column: TableColumn<T>) {
   return column.prop || column.type || column.label || ""
 }
 
-function resolveColumnBind(column: TableColumn) {
+function getCellValue(row: T, prop?: string) {
+  if (!prop) return undefined
+  return (row as Record<string, unknown>)[prop]
+}
+
+function resolveColumnBind(column: TableColumn<T>) {
   if (column.type === "selection") {
     return {
       type: "selection" as const,
       reserveSelection: column.reserveSelection ?? true,
-      selectable: (row: Record<string, unknown>) => !props.disabledId.includes(row[props.rowKey] as string | number),
+      selectable: (row: T) => {
+        const id = getCellValue(row, props.rowKey)
+        return !props.disabledId.includes(id as string | number)
+      },
       fixed: column.fixed,
       width: column.width || 50
     }
@@ -95,7 +103,7 @@ function resolveColumnBind(column: TableColumn) {
   return pickColumnProps(column)
 }
 
-function resolveShowTip(column: TableColumn) {
+function resolveShowTip(column: TableColumn<T>) {
   if (column.showTip !== undefined) return column.showTip
   if (column.type || column.slot) return false
   return props.showTip
@@ -105,7 +113,7 @@ function onSortChange(payload: unknown) {
   emit("sortChange", payload)
 }
 
-function toggleRowSelection(row: Record<string, unknown>, selected?: boolean) {
+function toggleRowSelection(row: T, selected?: boolean) {
   nextTick(() => {
     tableRef.value?.toggleRowSelection(row, selected)
   })
@@ -158,12 +166,12 @@ defineExpose({
             :name="column.slot || column.prop"
             :row="scope.row"
             :column="column"
-            :value="column.prop ? scope.row[column.prop] : undefined"
+            :value="getCellValue(scope.row, column.prop)"
             :index="scope.$index"
           >
             {{ column.formatter
-              ? column.formatter(column.prop ? scope.row[column.prop] : undefined, scope.row, column)
-              : ((column.prop && (scope.row[column.prop] || scope.row[column.prop] === 0)) ? scope.row[column.prop] : emptyText) }}
+              ? column.formatter(getCellValue(scope.row, column.prop), scope.row, column)
+              : (getCellValue(scope.row, column.prop) ?? emptyText) }}
           </slot>
         </template>
       </el-table-column>
