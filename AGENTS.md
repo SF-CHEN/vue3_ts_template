@@ -67,6 +67,8 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 - `src/layouts`：后台壳层布局。
 
 页面私有代码优先放在页面目录，不要提前提升为全局能力。
+后端契约类型直接从 `src/common/apis/types` 引用；不要创建只做 re-export 的页面 `types/index.ts`。
+页面确有额外 UI 类型时优先放同目录 `types.ts`，简单类型可直接留在页面文件中。
 
 ## Vue
 
@@ -90,7 +92,9 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 
 ## 表单
 
-- 普通表单优先直接使用 Element Plus，或使用 `CustomForm`。
+- 普通查询、编辑、CRUD 表单优先直接使用 Element Plus。
+- `CustomForm` 只用于明确需要 schema 驱动、动态字段或多处复用同一表单配置的场景。
+- 不为了减少几行模板代码把普通表单改成 schema 配置。
 - 表单字段与后端 payload 一致时直接提交表单对象。
 - 只有需要字段转换时才额外创建 submit payload。
 - 简单一级对象复制使用 `{ ...obj }`，不默认使用 deep clone。
@@ -98,7 +102,8 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 ## 表格
 
 - 普通列表可以使用 `CustomTable` 处理 columns / loading / pagination。
-- 特殊单元格优先使用 slot。
+- `columns` 只描述普通列属性；标签、按钮、链接、复杂展示等特殊单元格使用 Vue slot。
+- 不把业务点击逻辑放进 columns 配置。
 - 不新增 column registry / renderer plugin。
 
 ## API
