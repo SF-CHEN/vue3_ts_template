@@ -1,0 +1,72 @@
+{
+  // Use workspace TypeScript version
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  // 资源管理器：相关文件折叠到父文件下
+  // https://github.com/antfu/vscode-file-nesting-config
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    ".env": ".env.*, .envrc, env.d.ts",
+    ".gitignore": ".gitattributes, .gitmodules, .gitmessage",
+    "AGENTS.md": "CLAUDE.md, CLAUDE.local.md, .agents, .claude, .cursor, .trae",
+    "package.json": ".editorconfig, .eslint*, .npmrc, .nvmrc, .vscode*, eslint*, pnpm*, package-lock.json, skills-lock.json, yarn*",
+    "README*": "LICENSE, LICENSE.*, README-*, README_*, README.*",
+    "tsconfig.json": "tsconfig.*.json, tsconfig*.tsbuildinfo",
+    "vite.config.*": "tsconfig.*, uno.config.*, unocss.config.*, vitest.config.*",
+    "*.ts": "$(capture).js, $(capture).d.ts, $(capture).*.ts, $(capture)_*.ts",
+    "*.vue": "$(capture).*.ts, $(capture).*.js, $(capture).story.vue"
+  },
+
+  // Show inlay hints for destructured props
+  "vue.inlayHints.destructuredProps": true,
+
+  // Disable the default formatter, use eslint instead
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
+
+  // Auto fix
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+
+  // Silent the stylistic rules in you IDE, but still auto fix them
+  "eslint.rules.customizations": [
+    { "rule": "style/*", "severity": "off", "fixable": true },
+    { "rule": "format/*", "severity": "off", "fixable": true },
+    { "rule": "*-indent", "severity": "off", "fixable": true },
+    { "rule": "*-spacing", "severity": "off", "fixable": true },
+    { "rule": "*-spaces", "severity": "off", "fixable": true },
+    { "rule": "*-order", "severity": "off", "fixable": true },
+    { "rule": "*-dangle", "severity": "off", "fixable": true },
+    { "rule": "*-newline", "severity": "off", "fixable": true },
+    { "rule": "*quotes", "severity": "off", "fixable": true },
+    { "rule": "*semi", "severity": "off", "fixable": true }
+  ],
+
+  // Enable eslint for all supported languages
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue",
+    "html",
+    "markdown",
+    "json",
+    "jsonc",
+    "yaml",
+    "toml",
+    "xml",
+    "gql",
+    "graphql",
+    "astro",
+    "svelte",
+    "css",
+    "less",
+    "scss",
+    "pcss",
+    "postcss"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "id": "63",
+      "name": "63",
+      "host": "100.100.30.63",
+      "port": 22,
+      "username": "root",
+      "authentication": "password",
+      "localPath": "dist",
+      "remotePath": "/home/www/dataSafe",
+      "backup": false,
+      "keepBackups": 3
+    }
+  ]
+}

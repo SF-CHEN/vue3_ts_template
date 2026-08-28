@@ -1,0 +1,27 @@
+# Common
+dist
+node_modules
+.eslintcache
+vite.config.*.timestamp*
+
+# Swagger 本地缓存（由 api:generate 拉取生成，勿提交内网地址文档）
+script/api.json
+
+# MacOS
+.DS_Store
+
+# Local env files
+*.local
+*.local.json
+
+# Logs
+*.log
+
+# Use the pnpm
+package-lock.json
+yarn.lock
+
+# Agent data
+.omc
+.agents/skills/*
+!.agents/skills/v3-*/

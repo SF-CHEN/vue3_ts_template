@@ -1,0 +1,32 @@
+# 配置项文档：https://editorconfig.org（修改配置后重启编辑器）
+
+## 告知 EditorConfig 插件，当前即是根文件
+root = true
+
+## 适用全部文件
+[*]
+### 设置字符集
+charset = utf-8
+### 缩进风格 space | tab，建议 space
+indent_style = space
+### 缩进的空格数
+indent_size = 2
+### 换行符类型 lf | cr | crlf，一般都是设置为 lf
+end_of_line = lf
+### 是否在文件末尾插入空白行
+insert_final_newline = true
+### 是否删除一行中的前后空格
+trim_trailing_whitespace = true
+
+## 适用 .md 文件
+[*.md]
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+## Vue 单文件组件（.vue）
+[*.vue]
+# 缩进与全局一致
+indent_style = space
+indent_size = 2
+# IDE 软换行参考；短标签优先单行，属性换行由 eslint.config.js 的 vue/max-attributes-per-line 强制执行
+max_line_length = 120

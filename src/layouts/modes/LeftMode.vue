@@ -1,0 +1,180 @@
+<script lang="ts" setup>
+import { useDevice } from "@@/composables/useDevice"
+import { useAppStore } from "@/pinia/stores/app"
+import { useSettingsStore } from "@/pinia/stores/settings"
+import { AppMain, NavigationBar, Sidebar, TagsView } from "../components"
+
+const { isMobile } = useDevice()
+
+const appStore = useAppStore()
+
+const settingsStore = useSettingsStore()
+
+const { showTagsView, fixedHeader } = storeToRefs(settingsStore)
+
+/** 定义计算属性 layoutClasses，用于控制布局的类名 */
+const layoutClasses = computed(() => {
+  return {
+    "hide-sidebar": !appStore.sidebar.opened,
+    "open-sidebar": appStore.sidebar.opened,
+    "without-animation": appStore.sidebar.withoutAnimation,
+    "mobile": isMobile.value
+  }
+})
+
+/** 用于处理点击 mobile 端侧边栏遮罩层的事件 */
+function handleClickOutside() {
+  appStore.closeSidebar(false)
+}
+</script>
+
+<template>
+  <div :class="layoutClasses" class="app-wrapper">
+    <!-- mobile 端侧边栏遮罩层 -->
+    <div v-if="layoutClasses.mobile && layoutClasses['open-sidebar']" class="drawer-bg" @click="handleClickOutside" />
+    <!-- 左侧边栏 -->
+    <Sidebar class="sidebar-container" />
+    <!-- 主容器 -->
+    <div :class="{ 'has-tags-view': showTagsView }" class="main-container">
+      <!-- 头部导航栏和标签栏 -->
+      <div :class="{ 'fixed-header': fixedHeader }" class="layout-header">
+        <NavigationBar />
+        <TagsView v-show="showTagsView" />
+      </div>
+      <!-- 页面主体内容 -->
+      <AppMain class="app-main" />
+    </div>
+  </div>
+</template>
+
+<style lang="scss" scoped>
+@import "@@/assets/styles/mixins.scss";
+$transition-time: 0.35s;
+
+.app-wrapper {
+  @extend %clearfix;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.drawer-bg {
+  background-color: rgba(0, 0, 0, 0.3);
+  width: 100%;
+  top: 0;
+  height: 100%;
+  position: absolute;
+  z-index: 2001;
+}
+
+.sidebar-container {
+  background: linear-gradient(135deg, var(--app-dark), var(--app-secondary));
+  transition: width $transition-time;
+  width: var(--v3-sidebar-width);
+  height: 100%;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2002;
+  overflow: hidden;
+  border-right: var(--v3-sidebar-border-right);
+  box-shadow: var(--app-shadow);
+}
+
+.main-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left $transition-time;
+  margin-left: var(--v3-sidebar-width);
+  position: relative;
+  background-color: var(--app-page-bg);
+}
+
+.fixed-header {
+  position: fixed !important;
+  top: 0;
+  right: 0;
+  z-index: 9;
+  width: calc(100% - var(--v3-sidebar-width));
+  transition: width $transition-time;
+}
+
+.layout-header {
+  position: relative;
+  z-index: 9;
+  flex-shrink: 0;
+  background-color: var(--v3-header-bg-color);
+  box-shadow: var(--v3-header-box-shadow);
+  border-bottom: var(--v3-header-border-bottom);
+}
+
+/* 唯一主滚动容器：滚动条在内容区外层右缘 */
+.app-main {
+  flex: 1;
+  min-height: 0;
+  /* 与列方向 flex 交叉轴配合，防止宽表把整页撑出横向滚动 */
+  min-width: 0;
+  position: relative;
+  overflow: auto;
+  @extend %scrollbar;
+  /* 左右底留白；顶部额外间距让 page-card 上圆角露出来 */
+  padding: 16px 30px 30px;
+}
+
+.fixed-header + .app-main {
+  /* 避开固定顶栏 + 与顶栏之间的间距 */
+  padding-top: calc(var(--v3-navigationbar-height) + 16px);
+}
+
+.has-tags-view {
+  .fixed-header + .app-main {
+    padding-top: calc(var(--v3-header-height) + 16px);
+  }
+}
+
+.hide-sidebar {
+  .sidebar-container {
+    width: var(--v3-sidebar-hide-width);
+  }
+  .main-container {
+    margin-left: var(--v3-sidebar-hide-width);
+  }
+  .fixed-header {
+    width: calc(100% - var(--v3-sidebar-hide-width));
+  }
+}
+
+// 适配 mobile 端
+.mobile {
+  .sidebar-container {
+    transition: transform $transition-time;
+    width: var(--v3-sidebar-width);
+  }
+  .main-container {
+    margin-left: 0px;
+  }
+  .fixed-header {
+    width: 100%;
+  }
+  &.open-sidebar {
+    position: fixed;
+    top: 0;
+  }
+  &.hide-sidebar {
+    .sidebar-container {
+      pointer-events: none;
+      transition-duration: 0.3s;
+      transform: translate3d(calc(0px - var(--v3-sidebar-width)), 0, 0);
+    }
+  }
+}
+
+.without-animation {
+  .sidebar-container,
+  .main-container {
+    transition: none;
+  }
+}
+</style>
