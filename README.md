@@ -27,14 +27,30 @@ pnpm dev
 其他命令：
 
 ```bash
-pnpm typecheck
-pnpm lint
+pnpm lint               # ESLint 检查
+pnpm lint:fix           # ESLint 自动修复
+pnpm typecheck          # TypeScript 类型检查
+pnpm check              # lint + typecheck，提交/PR 前推荐执行
+pnpm check:fix          # lint:fix + typecheck
 pnpm test
 pnpm build
 pnpm build:staging
-pnpm api:generate          # 从 Swagger 生成 API / 类型
-pnpm api:doc               # 生成接口文档摘要
+pnpm api:generate       # 从 Swagger 生成 API / 类型
+pnpm api:doc            # 生成接口文档摘要
 ```
+
+## AI 开发约定
+
+项目根目录的 [AGENTS.md](./AGENTS.md) 是 AI 开发的主要规则入口。
+
+核心原则：
+
+- 先找已有相似实现，再新增代码。
+- 普通需求优先控制在 1～3 个文件内完成。
+- 不为未来需求提前抽象，不默认新增 Service / Repository / Factory / Registry / Event Bus 等层。
+- `eslint.config.js` 是代码风格的唯一事实来源，不在提示词里重复维护格式规则。
+- 代码完成后先执行 ESLint 自动修复，再执行 TypeScript 检查；`pnpm check` 通过后再视为完成。
+- 不允许通过关闭 ESLint、降低 TypeScript 严格度或滥用 `any` 来逃避检查。
 
 ## Mock 登录
 
