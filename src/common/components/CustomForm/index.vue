@@ -51,9 +51,9 @@ const filterAttrs = computed(() =>
   )
 )
 
-const formLabelWidth = computed(() => {
+const formLabelWidth = computed<string | number | undefined>(() => {
   const labelWidth = attrs.labelWidth ?? attrs["label-width"]
-  return labelWidth || labelWidth === 0 ? labelWidth : undefined
+  return typeof labelWidth === "string" || typeof labelWidth === "number" ? labelWidth : undefined
 })
 
 function onFieldChange(prop: string, val: unknown) {
@@ -102,7 +102,7 @@ defineExpose({
     :rules="rules"
     :inline="layout === 'inline'"
     v-bind="filterAttrs"
-    :label-width="formLabelWidth as any"
+    :label-width="formLabelWidth"
   >
     <el-row v-if="layout === 'grid'" :gutter="gutter">
       <el-col v-for="item in visibleSchema" :key="item.prop" :span="item.span || colSpan">
