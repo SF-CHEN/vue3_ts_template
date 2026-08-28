@@ -18,15 +18,41 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 - 优先修改已有文件，不因为小需求创建大量新文件。
 - 普通业务逻辑保持直接，不引入 Factory / Strategy / Registry / Repository / EventBus 等模式。
 - 同一逻辑实际重复 3 次后再考虑抽象。
+- 代码关系优先显式表达，避免隐藏依赖和跨层跳转。
 
 ## AI 执行规则
 
-- 开始编码前先阅读目标文件和直接依赖，不扫描整个仓库。
-- 优先参考 1 个最相似页面，不同时模仿多个实现。
+开始编码前：
+
+1. 先阅读目标文件和直接依赖，不默认扫描整个仓库。
+2. 新增页面、组件、API、Store、Composable、工具函数前，先搜索是否已有相似实现。
+3. 只参考 1 个最相似、当前仍在使用的实现，不同时模仿多个风格。
+4. 已有能力能解决时优先复用，不创建第二套实现。
+
+编码时：
+
 - 普通需求尽量控制在 1～3 个文件内完成。
 - 信息足够时直接实现，不为了非关键细节反复提问。
 - 需求存在小范围歧义时采用项目现有默认写法。
-- 完成后必须检查 TypeScript 类型和 lint。
+- 修改范围保持最小，不顺手重构无关代码。
+- 不添加无意义注释；注释只解释“为什么”，不重复代码行为。
+
+完成任务前：
+
+1. 先对本次新增和修改的文件执行 ESLint 自动修复。
+2. 再执行 TypeScript 类型检查。
+3. 修复本次修改引入的 lint / typecheck 错误。
+4. 需要验证完整项目时执行 `pnpm check`；涉及构建行为时再执行 `pnpm build`。
+5. 不因为历史问题批量修改与当前任务无关的文件。
+
+## ESLint 与代码质量
+
+- `eslint.config.js` 是代码风格与 lint 规则的唯一事实来源，AGENTS.md 不重复维护具体格式规则。
+- 不手动猜测引号、换行、排序等可自动修复规则，优先交给 ESLint。
+- 不得为了让代码通过检查而关闭或降低 ESLint 规则。
+- 不得随意新增 `eslint-disable`；确有必要时必须限定到最小范围并说明原因。
+- 不得修改 TypeScript 配置降低类型检查强度来规避错误。
+- 不得使用 `any`、强制类型断言或空 catch 仅为了让检查通过。
 
 ## 目录
 
@@ -50,6 +76,7 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 - 派生状态使用 `computed`；静态配置不要为了形式写成 `computed`。
 - 能用普通函数解决就不要创建 composable。
 - 能用 Vue slot 解决就不要创建 renderer / registry 系统。
+- 父子通信优先 props / emit；跨页面共享状态再考虑 Pinia。
 
 ## TypeScript
 
@@ -79,6 +106,7 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 - 页面只能依赖 API，API 禁止反向依赖页面。
 - request 层负责 Token、响应解包和通用错误处理。
 - 通用错误已由 request 层提示时，页面默认不重复 catch + message。
+- 页面只处理当前业务真正需要的成功提示、确认交互和特殊错误分支。
 
 ## Pinia
 
@@ -95,21 +123,40 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 - 同一个简单样式不要同时用 UnoCSS 和 SCSS 实现。
 - 不主动增加复杂动画、渐变、装饰和过度视觉设计。
 
+## 抽象规则
+
+只有满足以下条件之一才考虑抽象：
+
+- 相同逻辑已经实际出现至少 3 次。
+- 已明确存在多个调用方，并且抽象后明显更容易理解。
+- 单个文件职责已经明显混杂，拆分边界清晰。
+
+禁止因为以下理由抽象：
+
+- “以后可能会用”。
+- “这样更高级”。
+- “更符合某种设计模式”。
+- “为了扩展性先预留”。
+
 ## 禁止默认生成
 
 除非需求明确需要，否则不要新增：
 
 - Service 层 / Repository 层 / Factory / Strategy / Registry / Event Bus
 - 全局 Store / 全局 Composable / 通用 Base Component
-- 为未来功能预留的代码
+- Adapter / Mapper / Manager 等仅用于转发的中间层
+- 为未来功能预留的字段、参数、接口或空实现
 
 ## 验证
 
 常用命令：
 
 ```bash
+pnpm lint:fix
 pnpm typecheck
-pnpm lint
+pnpm check
 pnpm test
 pnpm build
 ```
+
+“代码写完”不等于任务完成；至少通过与本次修改相关的 ESLint 和 TypeScript 检查后才算完成。
