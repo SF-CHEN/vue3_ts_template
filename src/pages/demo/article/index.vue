@@ -123,7 +123,7 @@ async function handleSubmit() {
     dialogVisible.value = false
     await getTableData()
   } catch {
-    // 请求层负责统一错误提示；这里只负责结束当前交互。
+    return
   } finally {
     loading.value = false
   }
@@ -146,7 +146,7 @@ async function handleDelete(row: ArticleItem) {
     ElMessage.success("删除成功")
     await getTableData()
   } catch {
-    // 请求层负责统一错误提示。
+    return
   } finally {
     loading.value = false
   }
