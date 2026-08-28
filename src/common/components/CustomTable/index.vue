@@ -48,6 +48,15 @@ const emit = defineEmits<{
   "sortChange": [payload: unknown]
 }>()
 
+defineSlots<{
+  [name: string]: (props: {
+    row: T
+    column: TableColumn<T>
+    value: unknown
+    index: number
+  }) => unknown
+}>()
+
 const attrs = useAttrs()
 const tableAttrs = computed(() =>
   Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "selection"))
@@ -73,9 +82,19 @@ function columnKey(column: TableColumn<T>) {
   return column.prop || column.type || column.label || ""
 }
 
-function getCellValue(row: T, prop?: string) {
-  if (!prop) return undefined
+function toTableRow(row: unknown) {
+  return row as T
+}
+
+function getCellValue(row: unknown, prop?: string) {
+  if (!prop || !row || typeof row !== "object") return undefined
   return (row as Record<string, unknown>)[prop]
+}
+
+function getDisplayValue(row: unknown, column: TableColumn<T>) {
+  const tableRow = toTableRow(row)
+  const value = getCellValue(tableRow, column.prop)
+  return column.formatter ? column.formatter(value, tableRow, column) : (value ?? props.emptyText)
 }
 
 function resolveColumnBind(column: TableColumn<T>) {
@@ -83,7 +102,7 @@ function resolveColumnBind(column: TableColumn<T>) {
     return {
       type: "selection" as const,
       reserveSelection: column.reserveSelection ?? true,
-      selectable: (row: T) => {
+      selectable: (row: unknown) => {
         const id = getCellValue(row, props.rowKey)
         return !props.disabledId.includes(id as string | number)
       },
@@ -164,14 +183,12 @@ defineExpose({
         <template v-else-if="column.type !== 'selection'" #default="scope">
           <slot
             :name="column.slot || column.prop"
-            :row="scope.row"
+            :row="toTableRow(scope.row)"
             :column="column"
             :value="getCellValue(scope.row, column.prop)"
             :index="scope.$index"
           >
-            {{ column.formatter
-              ? column.formatter(getCellValue(scope.row, column.prop), scope.row, column)
-              : (getCellValue(scope.row, column.prop) ?? emptyText) }}
+            {{ getDisplayValue(scope.row, column) }}
           </slot>
         </template>
       </el-table-column>
