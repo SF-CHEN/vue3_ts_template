@@ -196,16 +196,14 @@ defineExpose({
 
     <el-empty v-else :description="emptyDescription" />
 
-    <slot name="pagination">
-      <CustomPagination
-        v-if="showPagination && total > 0"
-        v-model:page="page"
-        v-model:size="size"
-        :total="total"
-        v-bind="pageConfig"
-        @pagination="onPagination"
-      />
-    </slot>
+    <CustomPagination
+      v-if="showPagination && total > 0"
+      v-model:page="page"
+      v-model:size="size"
+      :total="total"
+      v-bind="pageConfig"
+      @pagination="onPagination"
+    />
   </div>
 </template>
 
