@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type { TableColumn, TablePagination, TablePaginationKeys } from "./types"
 import type { TableInstance } from "element-plus"
+import type { TableColumn, TablePagination, TablePaginationKeys } from "./types"
 import { computed, nextTick, useAttrs, useTemplateRef } from "vue"
 import CustomPagination from "../CustomPagination/index.vue"
 import { normalizeColumns, pickColumnProps, useVisibleColumns } from "./composables/useColumns"
@@ -13,7 +13,6 @@ defineOptions({
 
 const props = withDefaults(defineProps<{
   data?: any[]
-  /** 列配置 */
   columns: TableColumn<any>[]
   pagination?: TablePagination
   paginationKeys?: TablePaginationKeys
@@ -56,7 +55,6 @@ const tableAttrs = computed(() =>
 
 const showSelection = computed(() => props.selection || Boolean(attrs.selection))
 const dataColumns = useVisibleColumns(() => props.columns)
-
 const normalizedColumns = computed(() =>
   normalizeColumns(dataColumns.value, {
     showIndex: props.showId,
@@ -65,7 +63,10 @@ const normalizedColumns = computed(() =>
   })
 )
 
-const { page, size, total, onPagination } = useTablePagination(props, emit as (event: string, payload: TablePagination) => void)
+const { page, size, total, onPagination } = useTablePagination(
+  props,
+  emit as (event: string, payload: TablePagination) => void
+)
 const tableRef = useTemplateRef<TableInstance>("tableRef")
 
 function columnKey(column: TableColumn) {
@@ -82,6 +83,7 @@ function resolveColumnBind(column: TableColumn) {
       width: column.width || 50
     }
   }
+
   if (column.type === "index") {
     return {
       label: column.label || props.indexLabel,
@@ -89,18 +91,13 @@ function resolveColumnBind(column: TableColumn) {
       fixed: column.fixed
     }
   }
+
   return pickColumnProps(column)
 }
 
-/** 非纯文本列默认关闭溢出省略（按钮 / 标签等） */
-const NON_TEXT_COLUMN_TYPES = new Set(["operation", "tag", "selection", "index", "expand"])
-
 function resolveShowTip(column: TableColumn) {
-  if (column.showTip === true) return true
-  if (column.showTip === false) return false
-  const type = column.render || column.type || "text"
-  if (NON_TEXT_COLUMN_TYPES.has(type)) return false
-  if (column.buttons?.length) return false
+  if (column.showTip !== undefined) return column.showTip
+  if (column.type || column.slot) return false
   return props.showTip
 }
 
@@ -164,36 +161,9 @@ defineExpose({
             :value="column.prop ? scope.row[column.prop] : undefined"
             :index="scope.$index"
           >
-            <!-- 操作按钮 -->
-            <template v-if="column.buttons && column.buttons.length">
-              <template v-for="(btn, btnIdx) in column.buttons" :key="btnIdx">
-                <el-button
-                  v-if="typeof btn.show === 'function' ? btn.show(scope.row) : (btn.show !== false)"
-                  :type="btn.type || 'primary'"
-                  :size="btn.size || 'small'"
-                  :plain="btn.plain"
-                  :link="btn.link"
-                  v-bind="btn.props"
-                  @click="btn.onClick?.(scope.row, column)"
-                >
-                  {{ btn.label }}
-                </el-button>
-              </template>
-            </template>
-
-            <!-- 标签列 -->
-            <el-tag
-              v-else-if="column.type === 'tag' || column.render === 'tag'"
-              :type="(typeof column.tagType === 'function' ? column.tagType(scope.row[column.prop!], scope.row) : column.tagType) as any"
-              v-bind="column.tagProps"
-            >
-              {{ column.formatter ? column.formatter(scope.row[column.prop!], scope.row, column) : (scope.row[column.prop!] ?? emptyText) }}
-            </el-tag>
-
-            <!-- 文本列 / Formatter -->
-            <span v-else>
-              {{ column.formatter ? column.formatter(column.prop ? scope.row[column.prop] : undefined, scope.row, column) : ((column.prop && (scope.row[column.prop] || scope.row[column.prop] === 0)) ? scope.row[column.prop] : emptyText) }}
-            </span>
+            {{ column.formatter
+              ? column.formatter(column.prop ? scope.row[column.prop] : undefined, scope.row, column)
+              : ((column.prop && (scope.row[column.prop] || scope.row[column.prop] === 0)) ? scope.row[column.prop] : emptyText) }}
           </slot>
         </template>
       </el-table-column>
@@ -219,7 +189,6 @@ defineExpose({
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  /* 列总宽超出时由表格区域横滚，而不是撑开整页 */
   overflow-x: auto;
 }
 </style>
