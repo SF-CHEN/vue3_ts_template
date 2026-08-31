@@ -1,0 +1,131 @@
+---
+name: v3-connect-api
+description: Connect, add, or modify backend APIs in this Vue 3 repository, including Swagger/OpenAPI generation, handwritten request modules, auth adapters, proxy settings, response envelopes, and API contract types.
+---
+
+# Vue3 接口对接
+
+## 目标
+
+让页面只面对清晰的业务数据和类型，不在页面里拼 Axios 配置、响应包或后端兼容逻辑。
+
+## 先判断接口来源
+
+### 有 Swagger / OpenAPI
+
+优先使用现有生成器：
+
+```bash
+pnpm api:generate
+```
+
+生成位置：
+
+- `src/common/apis/<module>.ts`
+- `src/common/apis/types/<module>.ts`
+- `src/common/constants/enums.ts`
+- `src/common/constants/options.ts`
+- `src/common/constants/registry.ts`
+
+不要手改纯生成区域。若生成结果不符合后端契约，先确认是 Swagger 定义问题还是生成器规则问题，再决定是否修改 `script/generate-api.cjs`。
+
+### 没有 Swagger / 特殊适配接口
+
+在 `src/common/apis/<module>.ts` 手写请求。契约类型优先放 `src/common/apis/types/<module>.ts`；不要让 API 层引用 `src/pages`。
+
+## 项目请求约定
+
+`src/http/axios.ts` 已统一处理：
+
+- `VITE_BASE_URL`
+- Bearer Token
+- `{ code, data, message }` 解包
+- 通用 HTTP / 业务错误提示
+- 401 会话失效
+
+因此 API 默认写法是：
+
+```ts
+export function fetchUser(id: number) {
+  return request<User>({
+    url: `/users/${id}`,
+    method: "get"
+  })
+}
+```
+
+`request<T>()` 直接返回 `Promise<T>`。
+
+## 禁止写法
+
+不要：
+
+```ts
+request<ApiResponseData<User>>(...).then(res => res.data)
+```
+
+不要在页面：
+
+```ts
+axios.get(...)
+```
+
+不要为了每个模块创建 `service / repository / adapter` 中间层。
+
+## 参数约定
+
+- GET 查询参数使用 `params`。
+- POST / PUT / PATCH 请求体使用 `data`。
+- 页面字段与后端 DTO 一致时直接传对象，不重复重新赋值。
+- 只有字段名、格式或语义确实不同才创建 payload 转换。
+- 文件下载使用现有 request 的 `blob` / `arraybuffer` 能力，不单独新建 Axios 实例。
+
+## 错误处理
+
+request 层已显示通用错误时，页面默认只需要：
+
+```ts
+try {
+  await saveUser(form)
+  ElMessage.success("保存成功")
+} catch {
+  return
+}
+```
+
+只有业务明确需要识别某个错误码时，才增加特殊分支。
+
+不要在 API 和页面重复 `ElMessage.error`。
+
+## 真实后端接入
+
+常见接入顺序：
+
+1. `.env.development` 配置 `DEV_PROXY_TARGET`。
+2. 设置 `VITE_USE_MOCK=false`。
+3. 配置 `SWAGGER_URL` 并执行 `pnpm api:generate`。
+4. 修改必要的手写适配接口，例如 `src/common/apis/auth.ts`。
+5. 只有后端响应包不是 `{ code, data, message }` 时才修改 `src/http/axios.ts`。
+
+`VITE_*` 只放浏览器可公开读取的信息。不要把密钥、内网凭证放入前端环境变量。
+
+## 修改 Axios 的门槛
+
+只有以下情况才修改 `src/http/axios.ts`：
+
+- 全项目 Token 协议变化。
+- 全项目响应 envelope 变化。
+- 全项目业务成功码变化。
+- 全项目错误处理策略变化。
+
+单个接口的特殊格式在该 API 模块局部处理，不污染全局 request 层。
+
+## 完成检查
+
+- 页面是否只依赖 API 函数，而不是 Axios？
+- API 是否没有反向依赖页面？
+- 是否复用了 `request<T>()` 的 data 解包？
+- 是否重复创建了 response wrapper？
+- Swagger 生成区是否避免手改？
+- 是否只修改了真正需要的接口层？
+- 是否通过 ESLint / TypeScript；生成器有改动时是否执行相关生成验证？
