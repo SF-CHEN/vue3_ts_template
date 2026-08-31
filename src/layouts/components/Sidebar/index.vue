@@ -88,7 +88,9 @@ const sidebarMenuActiveTextColor = "var(--v3-sidebar-menu-active-text-color)"
   color: #94a3b8 !important;
   font-size: 13px;
   line-height: var(--v3-sidebar-menu-item-height);
-  transition: background-color 0.18s ease, color 0.18s ease;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
 
   .el-icon,
   .svg-icon {
