@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import type { FormOptionsMap, FormSchemaItem } from "../types"
+import type { Component } from "vue"
+import type { FormFieldType, FormOptionsMap, FormSchemaItem } from "../types"
 import CascaderField from "../fields/CascaderField.vue"
 import CheckboxField from "../fields/CheckboxField.vue"
 import DateField from "../fields/DateField.vue"
@@ -11,15 +12,7 @@ import SelectField from "../fields/SelectField.vue"
 import SwitchField from "../fields/SwitchField.vue"
 import TextareaField from "../fields/TextareaField.vue"
 
-type BuiltInFieldValue
-  = | string
-    | number
-    | boolean
-    | Date
-    | (string | number)[]
-    | (string | number | boolean)[]
-    | (string | number | Date)[]
-    | undefined
+type BuiltInFieldType = Exclude<FormFieldType, "custom">
 
 const props = withDefaults(defineProps<{
   item: FormSchemaItem
@@ -33,7 +26,7 @@ const emit = defineEmits<{
   fieldChange: [prop: string, value: unknown]
 }>()
 
-const fieldComponents = {
+const fieldComponents: Record<BuiltInFieldType, Component> = {
   input: InputField,
   textarea: TextareaField,
   number: NumberField,
@@ -44,10 +37,10 @@ const fieldComponents = {
   checkbox: CheckboxField,
   radio: RadioField,
   display: DisplayField
-} as const
+}
 
-const fieldValue = computed(() => props.form[props.item.prop] as BuiltInFieldValue)
-const fieldComponent = computed(() => {
+const fieldValue = computed(() => props.form[props.item.prop])
+const fieldComponent = computed<Component | undefined>(() => {
   const type = props.item.type || "input"
   return type === "custom" ? undefined : fieldComponents[type]
 })
