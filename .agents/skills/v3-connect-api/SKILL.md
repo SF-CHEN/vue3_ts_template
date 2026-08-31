@@ -13,7 +13,7 @@ description: Connect, add, or modify backend APIs in this Vue 3 repository, incl
 
 ### 有 Swagger / OpenAPI
 
-优先使用现有生成器：
+普通 JSON 接口优先使用现有生成器：
 
 ```bash
 pnpm api:generate
@@ -27,7 +27,21 @@ pnpm api:generate
 - `src/common/constants/options.ts`
 - `src/common/constants/registry.ts`
 
-不要手改纯生成区域。若生成结果不符合后端契约，先确认是 Swagger 定义问题还是生成器规则问题，再决定是否修改 `script/generate-api.cjs`。
+生成器默认面向 JSON 请求与 `{ code, data, message }` 响应模型。生成后要检查 OpenAPI 中是否存在：
+
+- `multipart/form-data` 上传。
+- `application/octet-stream`、PDF、ZIP、图片等二进制下载。
+- 单接口特殊响应协议。
+
+这些接口不要机械照搬生成结果。若只需要修正少数生成函数，可以修改该函数并在函数上方加：
+
+```ts
+// @keep
+```
+
+后续再次执行 `pnpm api:generate` 时，该函数会被保留。
+
+不要为了少数特殊接口把整个 Swagger 生成器扩成复杂客户端；只有大量接口都出现同一种稳定模式时才修改 `script/generate-api.cjs`。
 
 ### 没有 Swagger / 特殊适配接口
 
@@ -110,6 +124,7 @@ export function uploadFile(file: File, onProgress?: (percent: number) => void) {
 - 不把 `AxiosProgressEvent` 暴露给页面，API 映射成简单百分比或业务需要的数据。
 - 不手动设置 `Content-Type: multipart/form-data`；让浏览器 / Axios 自动生成 boundary。
 - 上传 loading / progress 展示属于页面状态，不需要 Pinia。
+- Swagger 生成器不会替你完成 FormData 组装；生成到 multipart 接口时按真实字段修正该 API 函数，并用 `// @keep` 保留。
 
 ## 文件下载
 
@@ -136,6 +151,7 @@ const url = URL.createObjectURL(blob)
 - 保存文件逻辑只出现一次时可以留在页面局部函数。
 - 相同保存逻辑实际出现至少 3 次后，再考虑提取通用 util。
 - `blob` / `arraybuffer` 继续使用现有 `request<T>()`，不要新建 Axios 客户端。
+- Swagger 二进制接口要显式补 `responseType: "blob"` 或 `"arraybuffer"`，并用 `// @keep` 保留特殊实现。
 
 ## 错误处理
 
@@ -154,6 +170,8 @@ try {
 
 不要在 API 和页面重复 `ElMessage.error`。
 
+对于 Blob / ArrayBuffer 下载，推荐后端在失败时返回非 2xx HTTP 状态；如果某个后端固定使用 HTTP 200 + JSON 错误包，则只对该下载接口做局部兼容，不默认增加全局二进制 JSON 解析逻辑。
+
 ## 真实后端接入
 
 常见接入顺序：
@@ -161,8 +179,9 @@ try {
 1. `.env.development` 配置 `DEV_PROXY_TARGET`。
 2. 设置 `VITE_USE_MOCK=false`。
 3. 配置 `SWAGGER_URL` 并执行 `pnpm api:generate`。
-4. 修改必要的手写适配接口，例如 `src/common/apis/auth.ts`。
-5. 只有后端响应包不是 `{ code, data, message }` 时才修改 `src/http/axios.ts`。
+4. 检查 multipart、二进制和特殊响应接口，必要时用 `// @keep` 修正生成函数。
+5. 修改必要的手写适配接口，例如 `src/common/apis/auth.ts`。
+6. 只有后端全局响应包不是 `{ code, data, message }` 时才修改 `src/http/axios.ts`。
 
 `VITE_*` 只放浏览器可公开读取的信息。不要把密钥、内网凭证放入前端环境变量。
 
@@ -185,7 +204,7 @@ try {
 - 上传是否没有手动设置 multipart boundary？
 - Axios 上传进度事件是否被转换成页面需要的简单数据？
 - 下载 API 是否只返回 Blob，不操作 DOM？
+- Swagger 的 multipart / 二进制接口是否已检查并用 `// @keep` 保留必要适配？
 - 是否重复创建了 response wrapper 或 Axios 实例？
-- Swagger 生成区是否避免手改？
 - 是否只修改了真正需要的接口层？
 - 是否通过 ESLint / TypeScript；生成器有改动时是否执行相关生成验证？
