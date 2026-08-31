@@ -42,6 +42,7 @@ const formRules = {
   status: [{ required: true, message: "请选择状态", trigger: "change" }]
 }
 
+// 页面只关心动作是否可用，具体角色与权限映射由统一权限工具负责。
 const canCreate = computed(() => checkPermission(["demo:user:create"]))
 const canEdit = computed(() => checkPermission(["demo:user:edit"]))
 const canDelete = computed(() => checkPermission(["demo:user:delete"]))
@@ -58,6 +59,7 @@ const columns: TableColumn<UserItem>[] = [
 async function getTableData() {
   loading.value = true
   try {
+    // 查询与分页统一走同一个入口，翻页时不会复制另一套请求参数拼装逻辑。
     const res = await fetchUserPage({
       pageCurrent: pagination.pageCurrent ?? 1,
       pageSize: pagination.pageSize ?? 10,
@@ -71,6 +73,7 @@ async function getTableData() {
 }
 
 function handleSearch() {
+  // 修改筛选条件后回到第一页，避免继续停留在旧查询的高页码。
   pagination.pageCurrent = 1
   getTableData()
 }
@@ -81,6 +84,7 @@ function handleReset() {
 }
 
 function resetForm() {
+  // 弹窗复用同一份表单，关闭/重新打开前同时清理校验状态和旧数据。
   formRef.value?.clearValidate()
   Object.assign(formData, DEFAULT_FORM)
 }
@@ -91,6 +95,7 @@ function handleCreate() {
 }
 
 function handleUpdate(row: UserItem) {
+  // 编辑时只回填可修改字段，列表中的展示字段不参与提交。
   Object.assign(formData, {
     id: row.id,
     username: row.username,
@@ -111,6 +116,7 @@ async function handleSubmit() {
 
   loading.value = true
   try {
+    // id 为空表示新增，否则走更新，避免维护额外的 create/edit 模式变量。
     if (formData.id === undefined) {
       await createUser({ ...formData })
       ElMessage.success("新增成功")
@@ -129,6 +135,7 @@ async function handleSubmit() {
 
 async function handleDelete(row: UserItem) {
   try {
+    // 删除前由页面确认用户意图；通用请求错误仍交给 request 层处理。
     await ElMessageBox.confirm(`确认删除用户「${row.username}」吗？`, "系统提示", {
       confirmButtonText: "确定",
       cancelButtonText: "取消",
