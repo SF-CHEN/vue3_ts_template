@@ -1,82 +1,52 @@
 <script lang="ts" setup>
 import Screenfull from "@@/components/Screenfull/index.vue"
 import { useDevice } from "@@/composables/useDevice"
-import { useDark, useToggle } from "@vueuse/core"
 import { ROLE_ADMIN } from "@@/constants/roles"
+import { useDark, useToggle } from "@vueuse/core"
 import { useAppStore } from "@/pinia/stores/app"
-import { useSettingsStore } from "@/pinia/stores/settings"
 import { useUserStore } from "@/pinia/stores/user"
+import { layoutsConfig } from "../../config"
 import { Hamburger } from "../index"
 
 const route = useRoute()
-
 const router = useRouter()
-
 const { isMobile } = useDevice()
-
 const appStore = useAppStore()
-
 const userStore = useUserStore()
 
-const settingsStore = useSettingsStore()
-
-/** 暗黑模式控制 */
 const isDark = useDark()
 const toggleDark = useToggle(isDark)
 
-/** 当前页标题（对齐旧顶栏：优先 showTitle） */
 const pageTitle = computed(() => String(route.meta.showTitle || route.meta.title || "首页"))
-
-/**
- * 子页（侧栏 hidden）：显示返回；菜单页：显示首页
- * 与路由 meta.hidden 约定一致，避免两个按钮同时出现
- */
 const isSubPage = computed(() => Boolean(route.meta.hidden))
-
-/** 是否管理员 */
 const isAdmin = computed(() => userStore.roles.includes(ROLE_ADMIN))
+const userInitials = computed(() => userStore.username.substring(0, 2).toUpperCase())
 
-/** 用户头像缩写 */
-const userInitials = computed(() => {
-  const name = userStore.username
-  if (!name) return ""
-  return name.substring(0, 2).toUpperCase()
-})
-
-/** 切换侧边栏（仅移动端展示） */
 function toggleSidebar() {
   appStore.toggleSidebar(false)
 }
 
-/**
- * 全局返回：优先浏览器历史；无历史时回落到侧栏高亮路径或首页
- */
 function goBack() {
   if (window.history.length > 1) {
     router.back()
     return
   }
+
   const activeMenu = route.meta.activeMenu
-  if (typeof activeMenu === "string" && activeMenu) {
-    router.push(activeMenu)
-    return
-  }
-  router.push("/")
+  router.push(typeof activeMenu === "string" && activeMenu ? activeMenu : "/")
 }
 
-/** 返回首页 */
 function goHome() {
   router.push("/dashboard")
 }
 
-/** 退出登录 */
 function handleLogout() {
   ElMessageBox.confirm("确定退出登录吗?", "警告", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
-  }).then(() => {
-    userStore.logout()
+  }).then(async () => {
+    await userStore.logout()
     ElMessage.success("退出登录成功!")
   }).catch(() => undefined)
 }
@@ -115,15 +85,13 @@ function handleLogout() {
     </div>
     <div class="right-menu">
       <div class="action-items">
-        <!-- 暗黑模式切换 -->
         <el-tooltip effect="dark" :content="isDark ? '切换亮色主题' : '切换暗黑主题'" placement="bottom">
-          <button type="button" class="nav-icon-btn" @click="() => toggleDark()">
+          <button type="button" class="nav-icon-btn" @click="toggleDark()">
             <span v-if="isDark" class="i-ep-sunny" />
             <span v-else class="i-ep-moon" />
           </button>
         </el-tooltip>
-        <!-- 全屏按钮 -->
-        <Screenfull v-if="settingsStore.showScreenfull" class="screenfull-btn" />
+        <Screenfull v-if="layoutsConfig.showScreenfull" class="screenfull-btn" />
       </div>
       <el-dropdown>
         <div class="user-info">
@@ -153,7 +121,6 @@ function handleLogout() {
 
 <style lang="scss" scoped>
 .navigation-bar {
-  /* 对齐旧 .header：不锁死过高，左右随内容区 30px */
   min-height: var(--v3-navigationbar-height);
   height: auto;
   padding: 18px 30px 12px;
