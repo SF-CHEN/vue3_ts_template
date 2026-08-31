@@ -156,23 +156,23 @@ onMounted(getTableData)
 <template>
   <div class="app-container">
     <el-card shadow="never" class="search-card">
-      <el-form :model="query" inline label-width="70px">
+      <el-form :model="query" inline label-width="auto" class="search-form">
         <el-form-item label="用户名">
-          <el-input v-model="query.username" clearable placeholder="搜索用户名" />
+          <el-input v-model="query.username" clearable placeholder="搜索用户名" class="search-input" />
         </el-form-item>
         <el-form-item label="角色">
-          <el-select v-model="query.role" clearable placeholder="全部" class="w-32">
+          <el-select v-model="query.role" clearable placeholder="全部" class="search-select">
             <el-option label="管理员" value="admin" />
             <el-option label="普通用户" value="user" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="query.status" clearable placeholder="全部" class="w-32">
+          <el-select v-model="query.status" clearable placeholder="全部" class="search-select">
             <el-option label="启用" value="enabled" />
             <el-option label="禁用" value="disabled" />
           </el-select>
         </el-form-item>
-        <el-form-item>
+        <el-form-item class="search-actions">
           <el-button type="primary" @click="handleSearch">
             查询
           </el-button>
@@ -254,14 +254,63 @@ onMounted(getTableData)
 }
 
 .search-card {
+  border-color: var(--app-border-light);
+  box-shadow: var(--app-shadow-soft);
+
   :deep(.el-card__body) {
-    padding-bottom: 4px;
+    padding: 16px 18px;
   }
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  gap: 12px 20px;
+  flex-wrap: wrap;
+
+  :deep(.el-form-item) {
+    margin-right: 0;
+    margin-bottom: 0;
+  }
+
+  :deep(.el-form-item__label) {
+    padding-right: 8px;
+    color: var(--app-text-secondary);
+    font-size: 13px;
+  }
+}
+
+.search-input {
+  width: 220px;
+}
+
+.search-select {
+  width: 140px;
+}
+
+.search-actions {
+  margin-left: 2px;
 }
 
 .toolbar {
   display: flex;
   align-items: center;
   min-height: 32px;
+}
+
+@media screen and (max-width: 768px) {
+  .search-form {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .search-input,
+  .search-select {
+    width: 100%;
+  }
+
+  .search-form :deep(.el-form-item) {
+    width: 100%;
+  }
 }
 </style>
