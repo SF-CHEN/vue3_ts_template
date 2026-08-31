@@ -13,6 +13,7 @@ import SwitchField from "../fields/SwitchField.vue"
 import TextareaField from "../fields/TextareaField.vue"
 
 type BuiltInFieldType = Exclude<FormFieldType, "custom">
+type FormFieldValue = string | number | boolean | Date | Array<string | number | boolean | Date>
 
 const props = withDefaults(defineProps<{
   item: FormSchemaItem
@@ -39,7 +40,10 @@ const fieldComponents: Record<BuiltInFieldType, Component> = {
   display: DisplayField
 }
 
-const fieldValue = computed(() => props.form[props.item.prop])
+const fieldValue = computed<FormFieldValue | undefined>(() => {
+  const value = props.form[props.item.prop]
+  return value == null ? undefined : value as FormFieldValue
+})
 const fieldComponent = computed<Component | undefined>(() => {
   const type = props.item.type || "input"
   return type === "custom" ? undefined : fieldComponents[type]
