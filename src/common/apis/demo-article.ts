@@ -34,8 +34,9 @@ function delay<T>(data: T, ms = 250): Promise<T> {
 const mockArticleApi = {
   async fetchPage(params: { pageCurrent: number, pageSize: number, query: ArticleQuery }) {
     const { pageCurrent, pageSize, query } = params
+    const title = query.title?.trim()
     let list = [...store]
-    if (query.title) list = list.filter(item => item.title.includes(query.title.trim()))
+    if (title) list = list.filter(item => item.title.includes(title))
     if (query.status) list = list.filter(item => item.status === query.status)
 
     const total = list.length
