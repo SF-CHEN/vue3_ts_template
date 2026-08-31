@@ -11,26 +11,19 @@
 ## 快速开始
 
 ```bash
-# 进入模板目录（或将本目录复制为新项目）
 cd template
-
-# 安装依赖
 pnpm i
-
-# 按文件夹名初始化包名 / 标题 / 缓存 Key（可选）
 pnpm run init -- -ProjectTitle 示例后台
-
-# 启动
 pnpm dev
 ```
 
-其他命令：
+常用命令：
 
 ```bash
 pnpm lint               # ESLint 检查
 pnpm lint:fix           # ESLint 自动修复
 pnpm typecheck          # TypeScript 类型检查
-pnpm check              # lint + typecheck，提交/PR 前推荐执行
+pnpm check              # lint + typecheck
 pnpm check:fix          # lint:fix + typecheck
 pnpm test
 pnpm build
@@ -58,10 +51,10 @@ pnpm api:doc            # 生成接口文档摘要
 
 默认开启本地 Mock API（`VITE_USE_MOCK=true`）：
 
-| 账号    | 密码 | 角色     | 说明                   |
-| ------- | ---- | -------- | ---------------------- |
-| `admin` | 任意 | 管理员   | 示例 CRUD 全部按钮可用 |
-| `user`  | 任意 | 普通用户 | 仅部分按钮权限         |
+| 账号 | 密码 | 角色 | 说明 |
+| --- | --- | --- | --- |
+| `admin` | 任意 | 管理员 | 示例 CRUD 全部按钮可用 |
+| `user` | 任意 | 普通用户 | 仅部分按钮权限 |
 
 ## 目录约定
 
@@ -73,16 +66,15 @@ src
 │  ├─ composables
 │  ├─ constants     # 含 Swagger 生成的 enums / options / registry
 │  └─ utils
-├─ http             # Axios 封装
-├─ layouts          # 布局
+├─ http             # Axios 请求层
+├─ layouts          # 后台壳层与静态布局配置
 ├─ pages
 │  ├─ demo          # CRUD 示例
 │  ├─ error
-│  ├─ home          # 首页
+│  ├─ home
 │  ├─ login
 │  └─ redirect
-├─ pinia
-├─ plugins
+├─ pinia            # 跨页面共享状态
 └─ router
 script
 ├─ init-project.ps1
@@ -90,6 +82,14 @@ script
 ├─ generate-api.cjs
 └─ doc.cjs
 ```
+
+页面私有逻辑优先留在页面目录；只有明确跨页面复用时才提升到 `common` 或 Pinia。
+
+## 布局配置
+
+布局功能统一在 `src/layouts/config.ts` 配置，例如 TagsView、Logo、固定 Header、Footer、全屏按钮、水印等。
+
+这些选项是**静态项目配置**，模板默认不提供运行时 Settings Drawer，也不把布局选项写入 Pinia / localStorage。需要某项能力时直接修改配置文件，避免为简单模板维护一套额外的配置管理系统。
 
 ## Swagger API 生成
 
@@ -111,7 +111,7 @@ pnpm api:generate -- --url=http://127.0.0.1:8080/v3/api-docs
 手写接口（如 `auth.ts`、`demo-article.ts`）请放在独立文件中；生成文件内可用 `/* <generated> */` … `/* </generated> */` 保护自定义代码不被覆盖。
 
 ```bash
-pnpm api:doc   # 输出 src/common/apis/docs/api.md
+pnpm api:doc
 ```
 
 ## 接入真实后端
@@ -144,7 +144,7 @@ meta: {
 }
 ```
 
-按钮权限使用 `checkPermission` 或 `v-permission`，角色判断使用 `checkRole`。后端接口仍必须自行校验权限。
+按钮权限使用显式的 `checkPermission()`，角色判断使用 `checkRole()`。后端接口仍必须自行校验权限。
 
 ## 新增页面
 
@@ -157,7 +157,7 @@ meta: {
 
 ## 版本与升级
 
-- 当前版本见 `package.json` → `version`（首版 `0.1.0`）
+- 当前版本见 `package.json` → `version`
 - 变更与迁移要点：[CHANGELOG.md](./CHANGELOG.md)
 - 升级流程与冲突处理：[docs/UPGRADE.md](./docs/UPGRADE.md)
 
