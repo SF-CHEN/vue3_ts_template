@@ -1,5 +1,4 @@
 import type { SidebarClosed, SidebarOpened } from "@@/constants/app-key"
-import type { LayoutsConfig } from "@/layouts/config"
 import type { TagView } from "@/pinia/stores/tags-view"
 import { CacheKey } from "@@/constants/cache-key"
 
@@ -25,18 +24,6 @@ export function setToken(token: string) {
 
 export function removeToken() {
   localStorage.removeItem(CacheKey.TOKEN)
-}
-
-export function getLayoutsConfig() {
-  return readJson<Partial<LayoutsConfig>>(CacheKey.CONFIG_LAYOUT, {})
-}
-
-export function setLayoutsConfig(settings: LayoutsConfig) {
-  localStorage.setItem(CacheKey.CONFIG_LAYOUT, JSON.stringify(settings))
-}
-
-export function removeLayoutsConfig() {
-  localStorage.removeItem(CacheKey.CONFIG_LAYOUT)
 }
 
 export function getSidebarStatus() {
