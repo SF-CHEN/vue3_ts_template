@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
     "target": "esnext",
     "lib": ["esnext", "dom"],
     "useDefineForClassFields": true,
@@ -10,12 +12,20 @@
       "@@/*": ["./src/common/*"]
     },
     "resolveJsonModule": true,
-    "types": ["vite/client", "element-plus/global"],
+    "types": ["vite/client", "node", "element-plus/global"],
     "strict": true,
     "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.vue", "**/*.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "tests/**/*.ts",
+    "types/**/*.d.ts",
+    "vite.config.ts",
+    "uno.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }
