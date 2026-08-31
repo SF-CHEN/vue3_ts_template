@@ -105,6 +105,17 @@ export const dynamicRoutes: RouteRecordRaw[] = [
           roles: [ROLE_ADMIN],
           permissions: ["demo:user:list"]
         }
+      },
+      {
+        path: "file",
+        component: () => import("@/pages/demo/file/index.vue"),
+        name: "DemoFile",
+        meta: {
+          title: "文件传输",
+          icon: "fa-solid:file-alt",
+          roles: [ROLE_ADMIN],
+          permissions: ["demo:file:transfer"]
+        }
       }
     ]
   }
