@@ -36,12 +36,12 @@ pnpm api:doc            # 生成接口文档摘要
 
 ## AI 开发约定
 
-项目根目录的 [AGENTS.md](./AGENTS.md) 是 AI 开发的主要规则入口。模板当前用法以 `AGENTS.md`、本 README、源码和 CI 为准，不保留优化前的历史审查文档，避免 AI 读到已经删除的旧架构。
+项目根目录的 [AGENTS.md](./AGENTS.md) 是 AI 开发的主要规则入口；高频跨文件工作流见 [docs/AI_SKILLS.md](./docs/AI_SKILLS.md)。模板当前用法以 `AGENTS.md`、Skill、README、源码和 CI 为准，不保留优化前的历史审查文档，避免 AI 读到已经删除的旧架构。
 
 核心原则：
 
 - 先找已有相似实现，再新增代码。
-- 普通需求优先控制在 1～3 个文件内完成。
+- 普通需求优先控制在 1～3 个主要文件内完成。
 - 普通 CRUD 表单优先直接使用 Element Plus；只有动态/schema 驱动表单再使用 `CustomForm`。
 - `CustomForm` 只保留固定内置字段；额外字段使用 slot，不新增运行时字段 registry。
 - `CustomTable` 只负责常规列、loading、selection/index 和 pagination；特殊单元格使用 Vue slot。
@@ -50,12 +50,14 @@ pnpm api:doc            # 生成接口文档摘要
 - 代码完成后先执行 ESLint 自动修复，再执行 TypeScript 检查；`pnpm check` 通过后再视为完成。
 - 不允许通过关闭 ESLint、降低 TypeScript 严格度或滥用 `any` 来逃避检查。
 
+当前保留 5 个工作流 Skill：页面、接口、路由、Store、图标。页面 Skill 负责整体编排，其余 Skill 只在任务真正涉及对应能力时读取，避免一次加载所有规则。
+
 ## Mock 登录
 
 默认开启本地 Mock API（`VITE_USE_MOCK=true`）：
 
-- `admin`：密码任意，管理员权限，示例 CRUD 全部按钮可用。
-- `user`：密码任意，普通用户权限，仅部分按钮可用。
+- `admin`：密码任意，管理员权限，示例 CRUD 全部按钮可用，并可访问用户管理示例。
+- `user`：密码任意，普通用户权限，仅部分文章管理按钮可用。
 
 ## 目录约定
 
@@ -70,7 +72,7 @@ src
 ├─ http             # Axios 请求层
 ├─ layouts          # 后台壳层与静态布局配置
 ├─ pages
-│  ├─ demo          # CRUD 示例
+│  ├─ demo          # CRUD / 用户管理示例
 │  ├─ error
 │  ├─ home
 │  ├─ login
@@ -177,7 +179,7 @@ meta: {
 3. 接口与后端契约类型优先直接使用 Swagger 生成的 `@@/apis/<module>` 和 `@@/apis/types/<module>`；不要为了转发类型额外创建 `types/index.ts`。
 4. 页面确实有额外 UI 类型时，再在页面目录放 `types.ts`；简单类型直接写在页面中即可。
 5. 只有跨页面共享状态时才新增 `src/pinia/stores/`。
-6. CRUD 可参考 `src/pages/demo/article`，其默认写法是普通 Element Plus 表单 + `CustomTable` + slot。
+6. CRUD 可参考 `src/pages/demo/article`；完整的页面 + API + 路由 + 权限 + 图标 Skill 实战可参考 `src/pages/demo/user` 与 `docs/AI_SKILLS.md`。
 
 ## 版本与升级
 
