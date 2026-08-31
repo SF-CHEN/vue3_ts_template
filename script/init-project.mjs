@@ -41,8 +41,28 @@ function getArgValue(names) {
   }
 }
 
+function getEnvValue(content, key) {
+  const line = content
+    .split(/\r?\n/)
+    .find(item => item.trimStart().startsWith(`${key} =`) || item.trimStart().startsWith(`${key}=`))
+  if (!line) return undefined
+  return line.slice(line.indexOf("=") + 1).trim()
+}
+
+function setEnvValue(content, key, value) {
+  return content
+    .split(/\r?\n/)
+    .map((line) => {
+      const trimmed = line.trimStart()
+      return trimmed.startsWith(`${key} =`) || trimmed.startsWith(`${key}=`)
+        ? `${key} = ${value}`
+        : line
+    })
+    .join("\n")
+}
+
 const env = readText(".env")
-const currentTitle = env.match(/^VITE_APP_TITLE\s*=\s*(.+)$/m)?.[1]?.trim()
+const currentTitle = getEnvValue(env, "VITE_APP_TITLE")
 const projectTitle = getArgValue(["--title", "--ProjectTitle", "-ProjectTitle"])
   || (currentTitle !== "Vue Admin Template" ? currentTitle : toTitle(folderName))
 const projectName = toKebabCase(folderName)
@@ -50,11 +70,7 @@ const projectName = toKebabCase(folderName)
 const packageJson = JSON.parse(readText("package.json"))
 packageJson.name = projectName
 writeText("package.json", `${JSON.stringify(packageJson, null, 2)}\n`)
-
-writeText(
-  ".env",
-  env.replace(/^VITE_APP_TITLE\s*=\s*.+$/m, `VITE_APP_TITLE = ${projectTitle}`)
-)
+writeText(".env", setEnvValue(env, "VITE_APP_TITLE", projectTitle))
 
 const cacheKeyFile = "src/common/constants/cache-key.ts"
 writeText(
