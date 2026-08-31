@@ -4,7 +4,7 @@ import { useFieldContext } from "../composables/useFieldContext"
 
 const props = withDefaults(defineProps<{
   item: FormSchemaItem
-  modelValue?: string | number | Date | Array<string | number | Date>
+  modelValue?: string | number | Date | string[] | number[] | Date[]
   form?: Record<string, unknown>
   options?: FormOptionsMap
 }>(), {
