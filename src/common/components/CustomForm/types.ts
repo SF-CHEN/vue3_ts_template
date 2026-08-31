@@ -1,17 +1,17 @@
 import type { FormItemRule } from "element-plus"
 
-export type FormFieldType =
-  | "input"
-  | "textarea"
-  | "number"
-  | "select"
-  | "cascader"
-  | "date"
-  | "switch"
-  | "checkbox"
-  | "radio"
-  | "display"
-  | "custom"
+export type FormFieldType
+  = | "input"
+    | "textarea"
+    | "number"
+    | "select"
+    | "cascader"
+    | "date"
+    | "switch"
+    | "checkbox"
+    | "radio"
+    | "display"
+    | "custom"
 
 /** 下拉 / 单选 / 多选选项 */
 export interface FormOption {
