@@ -1,15 +1,13 @@
-import type { RouterConfig } from "./types"
 import { createWebHashHistory, createWebHistory } from "vue-router"
 
 const VITE_ROUTER_HISTORY = import.meta.env.VITE_ROUTER_HISTORY
-
 const VITE_PUBLIC_PATH = import.meta.env.VITE_PUBLIC_PATH
 
 export const DASHBOARD_PATH = "/"
-
 export const REDIRECT_PATH = "/redirect"
 
-export const routerConfig: RouterConfig = {
-  history: VITE_ROUTER_HISTORY === "hash" ? createWebHashHistory(VITE_PUBLIC_PATH) : createWebHistory(VITE_PUBLIC_PATH),
-  dynamic: true
+export const routerConfig = {
+  history: VITE_ROUTER_HISTORY === "hash"
+    ? createWebHashHistory(VITE_PUBLIC_PATH)
+    : createWebHistory(VITE_PUBLIC_PATH)
 }

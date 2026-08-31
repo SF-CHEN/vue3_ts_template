@@ -4,7 +4,7 @@ import { useFieldContext } from "../composables/useFieldContext"
 
 const props = withDefaults(defineProps<{
   item: FormSchemaItem
-  modelValue?: string | number | Date | Array<string | number | Date>
+  modelValue?: string | number | Date | string[] | number[] | Date[]
   form?: Record<string, unknown>
   options?: FormOptionsMap
 }>(), {
@@ -30,7 +30,7 @@ function onChange(val: unknown) {
 
 <template>
   <el-date-picker
-    :model-value="modelValue as any"
+    :model-value="modelValue"
     class="date-field"
     :placeholder="placeholder"
     v-bind="item.typeProps"

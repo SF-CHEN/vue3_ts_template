@@ -1,11 +1,9 @@
 <script lang="ts" setup>
-import type { FormSchemaItem } from "@@/components/CustomForm/types"
-import type { TableColumn, TablePagination } from "@@/components/CustomTable/types"
 import type { FormInstance } from "element-plus"
-import type { ArticleFormData, ArticleItem, ArticleQuery } from "./types"
+import type { TableColumn, TablePagination } from "@@/components/CustomTable/types"
+import type { ArticleFormData, ArticleItem, ArticleQuery } from "@@/apis/types/demo-article"
 import { createArticle, deleteArticle, fetchArticlePage, updateArticle } from "@@/apis/demo-article"
 import CustomDialog from "@@/components/CustomDialog/index.vue"
-import CustomForm from "@@/components/CustomForm/index.vue"
 import CustomTable from "@@/components/CustomTable/index.vue"
 import { checkPermission } from "@@/utils/permission"
 import { useUserStore } from "@/pinia/stores/user"
@@ -13,17 +11,11 @@ import { useUserStore } from "@/pinia/stores/user"
 defineOptions({ name: "DemoArticle" })
 
 const userStore = useUserStore()
+const formRef = useTemplateRef<FormInstance>("formRef")
 
 const loading = ref(false)
 const tableData = ref<ArticleItem[]>([])
 const dialogVisible = ref(false)
-
-const formRef = useTemplateRef<{
-  validate: () => Promise<boolean>
-  clearValidate: () => void
-  resetFields: () => void
-  formRef?: FormInstance
-}>("formRef")
 
 const query = reactive<ArticleQuery>({
   title: "",
@@ -43,81 +35,25 @@ const DEFAULT_FORM: ArticleFormData = {
   author: ""
 }
 
-const formData = ref<ArticleFormData>({ ...DEFAULT_FORM })
+const formData = reactive<ArticleFormData>({ ...DEFAULT_FORM })
+
+const formRules = {
+  title: [{ required: true, message: "请输入标题", trigger: "blur" }],
+  author: [{ required: true, message: "请输入作者", trigger: "blur" }],
+  status: [{ required: true, message: "请选择状态", trigger: "change" }]
+}
 
 const canCreate = computed(() => checkPermission(["demo:article:create"]))
 const canEdit = computed(() => checkPermission(["demo:article:edit"]))
 const canDelete = computed(() => checkPermission(["demo:article:delete"]))
 
-const searchSchema: FormSchemaItem[] = [
-  {
-    prop: "title",
-    label: "标题",
-    type: "input",
-    typeProps: { clearable: true, placeholder: "搜索标题" }
-  },
-  {
-    prop: "status",
-    label: "状态",
-    type: "select",
-    options: [
-      { label: "全部", value: "" },
-      { label: "草稿", value: "draft" },
-      { label: "已发布", value: "published" }
-    ],
-    typeProps: { clearable: true }
-  }
-]
-
-const formSchema: FormSchemaItem[] = [
-  {
-    prop: "title",
-    label: "标题",
-    type: "input",
-    rule: true,
-    ruleMessage: "请输入标题",
-    trigger: "blur"
-  },
-  {
-    prop: "author",
-    label: "作者",
-    type: "input",
-    rule: true,
-    ruleMessage: "请输入作者",
-    trigger: "blur"
-  },
-  {
-    prop: "status",
-    label: "状态",
-    type: "select",
-    rule: true,
-    ruleMessage: "请选择状态",
-    options: [
-      { label: "草稿", value: "draft" },
-      { label: "已发布", value: "published" }
-    ]
-  }
-]
-
 const columns: TableColumn<ArticleItem>[] = [
   { prop: "id", label: "ID", width: 80 },
   { prop: "title", label: "标题", minWidth: 180 },
   { prop: "author", label: "作者", width: 120 },
-  {
-    prop: "status",
-    label: "状态",
-    width: 110,
-    type: "tag",
-    formatter: value => (value === "published" ? "已发布" : "草稿")
-  },
+  { prop: "status", label: "状态", width: 110, slot: "status" },
   { prop: "createdAt", label: "创建时间", width: 180 },
-  {
-    prop: "actions",
-    slot: "actions",
-    label: "操作",
-    width: 200,
-    fixed: "right"
-  }
+  { prop: "actions", label: "操作", width: 200, fixed: "right", slot: "actions" }
 ]
 
 async function getTableData() {
@@ -141,102 +77,106 @@ function handleSearch() {
 }
 
 function handleReset() {
-  query.title = ""
-  query.status = ""
+  Object.assign(query, { title: "", status: "" })
   handleSearch()
 }
 
+function resetForm() {
+  formRef.value?.clearValidate()
+  Object.assign(formData, DEFAULT_FORM)
+}
+
 function handleCreate() {
-  formData.value = {
-    ...DEFAULT_FORM,
-    author: userStore.username || "anonymous"
-  }
+  resetForm()
+  formData.author = userStore.username || "anonymous"
   dialogVisible.value = true
 }
 
 function handleUpdate(row: ArticleItem) {
-  formData.value = {
+  Object.assign(formData, {
     id: row.id,
     title: row.title,
     status: row.status,
     author: row.author
-  }
+  })
   dialogVisible.value = true
 }
 
-async function handleCreateOrUpdate() {
+async function handleSubmit() {
+  if (!formRef.value) return
+
   try {
-    await formRef.value?.validate()
+    await formRef.value.validate()
   } catch {
-    ElMessage.error("表单校验不通过")
     return
   }
 
   loading.value = true
   try {
-    if (formData.value.id === undefined) {
-      await createArticle(formData.value)
+    if (formData.id === undefined) {
+      await createArticle({ ...formData })
       ElMessage.success("新增成功")
     } else {
-      await updateArticle(formData.value)
+      await updateArticle({ ...formData })
       ElMessage.success("修改成功")
     }
     dialogVisible.value = false
-    getTableData()
-  } catch (error) {
-    ElMessage.error((error as Error).message || "操作失败")
+    await getTableData()
+  } catch {
+    return
   } finally {
     loading.value = false
   }
 }
 
-function resetForm() {
-  formRef.value?.clearValidate()
-  formData.value = { ...DEFAULT_FORM }
+async function handleDelete(row: ArticleItem) {
+  try {
+    await ElMessageBox.confirm(`确认删除「${row.title}」吗？`, "系统提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning"
+    })
+  } catch {
+    return
+  }
+
+  loading.value = true
+  try {
+    await deleteArticle(row.id)
+    ElMessage.success("删除成功")
+    await getTableData()
+  } catch {
+    return
+  } finally {
+    loading.value = false
+  }
 }
 
-function handleDelete(row: ArticleItem) {
-  ElMessageBox.confirm(`确认删除「${row.title}」吗？`, "系统提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning"
-  }).then(async () => {
-    loading.value = true
-    try {
-      await deleteArticle(row.id)
-      ElMessage.success("删除成功")
-      getTableData()
-    } catch (error) {
-      ElMessage.error((error as Error).message || "删除失败")
-    } finally {
-      loading.value = false
-    }
-  }).catch(() => undefined)
-}
-
-onMounted(() => {
-  getTableData()
-})
+onMounted(getTableData)
 </script>
 
 <template>
-  <div v-loading="loading" class="app-container">
+  <div class="app-container">
     <el-card shadow="never" class="search-card">
-      <CustomForm
-        v-model="query"
-        :schema="searchSchema"
-        layout="inline"
-        label-width="60px"
-      >
-        <template #footer>
+      <el-form :model="query" inline label-width="60px">
+        <el-form-item label="标题">
+          <el-input v-model="query.title" clearable placeholder="搜索标题" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="query.status" clearable placeholder="全部" class="w-32">
+            <el-option label="草稿" value="draft" />
+            <el-option label="已发布" value="published" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" @click="handleSearch">
             查询
           </el-button>
           <el-button @click="handleReset">
             重置
           </el-button>
-        </template>
-      </CustomForm>
+        </el-form-item>
+      </el-form>
     </el-card>
 
     <div class="toolbar">
@@ -253,28 +193,23 @@ onMounted(() => {
     </div>
 
     <CustomTable
+      v-model:pagination="pagination"
+      :loading="loading"
       :data="tableData"
       :columns="columns"
-      v-model:pagination="pagination"
       @pagination="getTableData"
     >
+      <template #status="{ value }">
+        <el-tag :type="value === 'published' ? 'success' : 'info'">
+          {{ value === "published" ? "已发布" : "草稿" }}
+        </el-tag>
+      </template>
+
       <template #actions="{ row }">
-        <el-button
-          v-if="canEdit"
-          type="warning"
-          plain
-          size="small"
-          @click="handleUpdate(row as ArticleItem)"
-        >
+        <el-button v-if="canEdit" type="warning" plain size="small" @click="handleUpdate(row)">
           编辑
         </el-button>
-        <el-button
-          v-if="canDelete"
-          type="danger"
-          plain
-          size="small"
-          @click="handleDelete(row as ArticleItem)"
-        >
+        <el-button v-if="canDelete" type="danger" plain size="small" @click="handleDelete(row)">
           删除
         </el-button>
       </template>
@@ -284,16 +219,23 @@ onMounted(() => {
       v-model="dialogVisible"
       :title="formData.id === undefined ? '新增文章' : '编辑文章'"
       width="520px"
-      @confirm="handleCreateOrUpdate"
+      @confirm="handleSubmit"
       @closed="resetForm"
     >
-      <CustomForm
-        ref="formRef"
-        v-model="formData"
-        :schema="formSchema"
-        label-width="80px"
-        label-position="left"
-      />
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="80px" label-position="left">
+        <el-form-item label="标题" prop="title">
+          <el-input v-model="formData.title" />
+        </el-form-item>
+        <el-form-item label="作者" prop="author">
+          <el-input v-model="formData.author" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="formData.status" class="w-full">
+            <el-option label="草稿" value="draft" />
+            <el-option label="已发布" value="published" />
+          </el-select>
+        </el-form-item>
+      </el-form>
     </CustomDialog>
   </div>
 </template>

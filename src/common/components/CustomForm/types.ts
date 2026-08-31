@@ -1,5 +1,17 @@
 import type { FormItemRule } from "element-plus"
-import type { Component } from "vue"
+
+export type FormFieldType
+  = | "input"
+    | "textarea"
+    | "number"
+    | "select"
+    | "cascader"
+    | "date"
+    | "switch"
+    | "checkbox"
+    | "radio"
+    | "display"
+    | "custom"
 
 /** 下拉 / 单选 / 多选选项 */
 export interface FormOption {
@@ -8,16 +20,13 @@ export interface FormOption {
   [key: string]: unknown
 }
 
-/** 表单 schema 项 */
+/** 仅用于明确需要 schema 驱动的动态表单。 */
 export interface FormSchemaItem {
   prop: string
   label?: string
-  /** 字段类型，默认 input；custom 仅渲染插槽 */
-  type?: string
-  /** 透传给具体控件（el-input / el-select 等） */
+  type?: FormFieldType
+  /** 透传给具体 Element Plus 控件。 */
   typeProps?: Record<string, unknown>
-  /** 透传给字段组件根 */
-  componentProps?: Record<string, unknown>
   options?: FormOption[]
   valueKey?: string
   labelKey?: string
@@ -27,20 +36,15 @@ export interface FormSchemaItem {
   showFn?: (form: Record<string, unknown>) => boolean
   span?: number
   labelWidth?: string | number
-  /** 快捷必填：true → required rule */
+  /** 快捷必填规则。 */
   rule?: boolean
   ruleMessage?: string
   trigger?: string | string[]
   validator?: FormItemRule["validator"]
   pattern?: FormItemRule[]
   rules?: FormItemRule[]
-  /** display / div 自定义展示 */
+  /** display 字段格式化。 */
   fn?: (value: unknown, form: Record<string, unknown>) => string
-  [key: string]: unknown
-}
-
-export interface FormTypeConfig {
-  component: Component
 }
 
 export type FormOptionsMap = Record<string, FormOption[]>

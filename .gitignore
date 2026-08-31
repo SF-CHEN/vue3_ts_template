@@ -25,3 +25,4 @@ yarn.lock
 .omc
 .agents/skills/*
 !.agents/skills/v3-*/
+!.agents/skills/v3-*/SKILL.md

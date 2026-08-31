@@ -1,12 +1,19 @@
-// 统一处理 localStorage
-
-import type { UserProfile } from "./types"
 import type { SidebarClosed, SidebarOpened } from "@@/constants/app-key"
-import type { LayoutsConfig } from "@/layouts/config"
 import type { TagView } from "@/pinia/stores/tags-view"
 import { CacheKey } from "@@/constants/cache-key"
 
-// #region Token
+function readJson<T>(key: string, fallback: T): T {
+  const json = localStorage.getItem(key)
+  if (!json) return fallback
+
+  try {
+    return JSON.parse(json) as T
+  } catch {
+    localStorage.removeItem(key)
+    return fallback
+  }
+}
+
 export function getToken() {
   return localStorage.getItem(CacheKey.TOKEN)
 }
@@ -18,39 +25,7 @@ export function setToken(token: string) {
 export function removeToken() {
   localStorage.removeItem(CacheKey.TOKEN)
 }
-// #endregion
 
-// #region 用户摘要
-export function getUserProfile() {
-  const json = localStorage.getItem(CacheKey.USER_PROFILE)
-  return json ? (JSON.parse(json) as UserProfile) : null
-}
-
-export function setUserProfile(profile: UserProfile) {
-  localStorage.setItem(CacheKey.USER_PROFILE, JSON.stringify(profile))
-}
-
-export function removeUserProfile() {
-  localStorage.removeItem(CacheKey.USER_PROFILE)
-}
-// #endregion
-
-// #region 系统布局配置
-export function getLayoutsConfig() {
-  const json = localStorage.getItem(CacheKey.CONFIG_LAYOUT)
-  return json ? (JSON.parse(json) as LayoutsConfig) : null
-}
-
-export function setLayoutsConfig(settings: LayoutsConfig) {
-  localStorage.setItem(CacheKey.CONFIG_LAYOUT, JSON.stringify(settings))
-}
-
-export function removeLayoutsConfig() {
-  localStorage.removeItem(CacheKey.CONFIG_LAYOUT)
-}
-// #endregion
-
-// #region 侧边栏状态
 export function getSidebarStatus() {
   return localStorage.getItem(CacheKey.SIDEBAR_STATUS)
 }
@@ -58,29 +33,36 @@ export function getSidebarStatus() {
 export function setSidebarStatus(sidebarStatus: SidebarOpened | SidebarClosed) {
   localStorage.setItem(CacheKey.SIDEBAR_STATUS, sidebarStatus)
 }
-// #endregion
 
-// #region 标签栏
 export function getVisitedViews() {
-  const json = localStorage.getItem(CacheKey.VISITED_VIEWS)
-  return JSON.parse(json ?? "[]") as TagView[]
+  return readJson<TagView[]>(CacheKey.VISITED_VIEWS, [])
 }
 
 export function setVisitedViews(views: TagView[]) {
-  views.forEach((view) => {
-    // 删除不必要的属性，防止 JSON.stringify 处理到循环引用
-    delete view.matched
-    delete view.redirectedFrom
-  })
-  localStorage.setItem(CacheKey.VISITED_VIEWS, JSON.stringify(views))
+  const serializableViews = views.map(view => ({
+    name: view.name,
+    path: view.path,
+    fullPath: view.fullPath,
+    hash: view.hash,
+    query: view.query,
+    params: view.params,
+    meta: view.meta
+  }))
+  localStorage.setItem(CacheKey.VISITED_VIEWS, JSON.stringify(serializableViews))
+}
+
+export function removeVisitedViews() {
+  localStorage.removeItem(CacheKey.VISITED_VIEWS)
 }
 
 export function getCachedViews() {
-  const json = localStorage.getItem(CacheKey.CACHED_VIEWS)
-  return JSON.parse(json ?? "[]") as string[]
+  return readJson<string[]>(CacheKey.CACHED_VIEWS, [])
 }
 
 export function setCachedViews(views: string[]) {
   localStorage.setItem(CacheKey.CACHED_VIEWS, JSON.stringify(views))
 }
-// #endregion
+
+export function removeCachedViews() {
+  localStorage.removeItem(CacheKey.CACHED_VIEWS)
+}

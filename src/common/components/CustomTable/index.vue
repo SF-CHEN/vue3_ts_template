@@ -1,6 +1,6 @@
-<script lang="ts" setup>
-import type { TableColumn, TablePagination, TablePaginationKeys } from "./types"
+<script setup lang="ts" generic="T extends object">
 import type { TableInstance } from "element-plus"
+import type { TableColumn, TablePagination, TablePaginationKeys } from "./types"
 import { computed, nextTick, useAttrs, useTemplateRef } from "vue"
 import CustomPagination from "../CustomPagination/index.vue"
 import { normalizeColumns, pickColumnProps, useVisibleColumns } from "./composables/useColumns"
@@ -12,9 +12,8 @@ defineOptions({
 })
 
 const props = withDefaults(defineProps<{
-  data?: any[]
-  /** 列配置 */
-  columns: TableColumn<any>[]
+  data?: T[]
+  columns: TableColumn<T>[]
   pagination?: TablePagination
   paginationKeys?: TablePaginationKeys
   pageConfig?: Record<string, unknown>
@@ -49,6 +48,15 @@ const emit = defineEmits<{
   "sortChange": [payload: unknown]
 }>()
 
+defineSlots<{
+  [name: string]: (props: {
+    row: T
+    column: TableColumn<T>
+    value: unknown
+    index: number
+  }) => unknown
+}>()
+
 const attrs = useAttrs()
 const tableAttrs = computed(() =>
   Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "selection"))
@@ -56,7 +64,6 @@ const tableAttrs = computed(() =>
 
 const showSelection = computed(() => props.selection || Boolean(attrs.selection))
 const dataColumns = useVisibleColumns(() => props.columns)
-
 const normalizedColumns = computed(() =>
   normalizeColumns(dataColumns.value, {
     showIndex: props.showId,
@@ -65,23 +72,45 @@ const normalizedColumns = computed(() =>
   })
 )
 
-const { page, size, total, onPagination } = useTablePagination(props, emit as (event: string, payload: TablePagination) => void)
+const { page, size, total, onPagination } = useTablePagination(
+  props,
+  emit as (event: string, payload: TablePagination) => void
+)
 const tableRef = useTemplateRef<TableInstance>("tableRef")
 
-function columnKey(column: TableColumn) {
+function columnKey(column: TableColumn<T>) {
   return column.prop || column.type || column.label || ""
 }
 
-function resolveColumnBind(column: TableColumn) {
+function toTableRow(row: unknown) {
+  return row as T
+}
+
+function getCellValue(row: unknown, prop?: string) {
+  if (!prop || !row || typeof row !== "object") return undefined
+  return (row as Record<string, unknown>)[prop]
+}
+
+function getDisplayValue(row: unknown, column: TableColumn<T>) {
+  const tableRow = toTableRow(row)
+  const value = getCellValue(tableRow, column.prop)
+  return column.formatter ? column.formatter(value, tableRow, column) : (value ?? props.emptyText)
+}
+
+function resolveColumnBind(column: TableColumn<T>) {
   if (column.type === "selection") {
     return {
       type: "selection" as const,
       reserveSelection: column.reserveSelection ?? true,
-      selectable: (row: Record<string, unknown>) => !props.disabledId.includes(row[props.rowKey] as string | number),
+      selectable: (row: unknown) => {
+        const id = getCellValue(row, props.rowKey)
+        return !props.disabledId.includes(id as string | number)
+      },
       fixed: column.fixed,
       width: column.width || 50
     }
   }
+
   if (column.type === "index") {
     return {
       label: column.label || props.indexLabel,
@@ -89,18 +118,13 @@ function resolveColumnBind(column: TableColumn) {
       fixed: column.fixed
     }
   }
+
   return pickColumnProps(column)
 }
 
-/** 非纯文本列默认关闭溢出省略（按钮 / 标签等） */
-const NON_TEXT_COLUMN_TYPES = new Set(["operation", "tag", "selection", "index", "expand"])
-
-function resolveShowTip(column: TableColumn) {
-  if (column.showTip === true) return true
-  if (column.showTip === false) return false
-  const type = column.render || column.type || "text"
-  if (NON_TEXT_COLUMN_TYPES.has(type)) return false
-  if (column.buttons?.length) return false
+function resolveShowTip(column: TableColumn<T>) {
+  if (column.showTip !== undefined) return column.showTip
+  if (column.type || column.slot) return false
   return props.showTip
 }
 
@@ -108,7 +132,7 @@ function onSortChange(payload: unknown) {
   emit("sortChange", payload)
 }
 
-function toggleRowSelection(row: Record<string, unknown>, selected?: boolean) {
+function toggleRowSelection(row: T, selected?: boolean) {
   nextTick(() => {
     tableRef.value?.toggleRowSelection(row, selected)
   })
@@ -159,41 +183,12 @@ defineExpose({
         <template v-else-if="column.type !== 'selection'" #default="scope">
           <slot
             :name="column.slot || column.prop"
-            :row="scope.row"
+            :row="toTableRow(scope.row)"
             :column="column"
-            :value="column.prop ? scope.row[column.prop] : undefined"
+            :value="getCellValue(scope.row, column.prop)"
             :index="scope.$index"
           >
-            <!-- 操作按钮 -->
-            <template v-if="column.buttons && column.buttons.length">
-              <template v-for="(btn, btnIdx) in column.buttons" :key="btnIdx">
-                <el-button
-                  v-if="typeof btn.show === 'function' ? btn.show(scope.row) : (btn.show !== false)"
-                  :type="btn.type || 'primary'"
-                  :size="btn.size || 'small'"
-                  :plain="btn.plain"
-                  :link="btn.link"
-                  v-bind="btn.props"
-                  @click="btn.onClick?.(scope.row, column)"
-                >
-                  {{ btn.label }}
-                </el-button>
-              </template>
-            </template>
-
-            <!-- 标签列 -->
-            <el-tag
-              v-else-if="column.type === 'tag' || column.render === 'tag'"
-              :type="(typeof column.tagType === 'function' ? column.tagType(scope.row[column.prop!], scope.row) : column.tagType) as any"
-              v-bind="column.tagProps"
-            >
-              {{ column.formatter ? column.formatter(scope.row[column.prop!], scope.row, column) : (scope.row[column.prop!] ?? emptyText) }}
-            </el-tag>
-
-            <!-- 文本列 / Formatter -->
-            <span v-else>
-              {{ column.formatter ? column.formatter(column.prop ? scope.row[column.prop] : undefined, scope.row, column) : ((column.prop && (scope.row[column.prop] || scope.row[column.prop] === 0)) ? scope.row[column.prop] : emptyText) }}
-            </span>
+            {{ getDisplayValue(scope.row, column) }}
           </slot>
         </template>
       </el-table-column>
@@ -201,16 +196,14 @@ defineExpose({
 
     <el-empty v-else :description="emptyDescription" />
 
-    <slot name="pagination">
-      <CustomPagination
-        v-if="showPagination && total > 0"
-        v-model:page="page"
-        v-model:size="size"
-        :total="total"
-        v-bind="pageConfig"
-        @pagination="onPagination"
-      />
-    </slot>
+    <CustomPagination
+      v-if="showPagination && total > 0"
+      v-model:page="page"
+      v-model:size="size"
+      :total="total"
+      v-bind="pageConfig"
+      @pagination="onPagination"
+    />
   </div>
 </template>
 
@@ -219,7 +212,6 @@ defineExpose({
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  /* 列总宽超出时由表格区域横滚，而不是撑开整页 */
   overflow-x: auto;
 }
 </style>

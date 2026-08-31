@@ -80,8 +80,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       title: "示例",
       icon: "fa-solid:flask",
       alwaysShow: true,
-      roles: [ROLE_ADMIN, ROLE_USER],
-      permissions: ["demo:article:list"]
+      roles: [ROLE_ADMIN, ROLE_USER]
     },
     children: [
       {
@@ -94,6 +93,28 @@ export const dynamicRoutes: RouteRecordRaw[] = [
           roles: [ROLE_ADMIN, ROLE_USER],
           permissions: ["demo:article:list"],
           keepAlive: true
+        }
+      },
+      {
+        path: "user",
+        component: () => import("@/pages/demo/user/index.vue"),
+        name: "DemoUser",
+        meta: {
+          title: "用户管理",
+          icon: "ep:user",
+          roles: [ROLE_ADMIN],
+          permissions: ["demo:user:list"]
+        }
+      },
+      {
+        path: "file",
+        component: () => import("@/pages/demo/file/index.vue"),
+        name: "DemoFile",
+        meta: {
+          title: "文件传输",
+          icon: "fa-solid:file-alt",
+          roles: [ROLE_ADMIN],
+          permissions: ["demo:file:transfer"]
         }
       }
     ]

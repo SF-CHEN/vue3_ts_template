@@ -1,11 +1,9 @@
-import type { LayoutsConfig } from "./types"
-import { getLayoutsConfig } from "@@/utils/local-storage"
-
-export type { LayoutsConfig } from "./types"
-
-/** 默认配置 */
-const DEFAULT_CONFIG: LayoutsConfig = {
-  showSettings: false,
+/**
+ * 布局配置。
+ *
+ * 保持为静态配置：需要某项能力时直接修改这里，不为模板默认引入运行时配置面板和持久化状态。
+ */
+export const layoutsConfig = {
   showTagsView: false,
   fixedHeader: true,
   showFooter: false,
@@ -15,11 +13,4 @@ const DEFAULT_CONFIG: LayoutsConfig = {
   showWatermark: false,
   showGreyMode: false,
   showColorWeakness: false
-}
-
-/** 项目配置 */
-export const layoutsConfig: LayoutsConfig = {
-  ...DEFAULT_CONFIG,
-  ...getLayoutsConfig(),
-  showSettings: DEFAULT_CONFIG.showSettings
-}
+} as const

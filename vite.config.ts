@@ -9,13 +9,13 @@ import { ElementPlusResolver } from "unplugin-vue-components/resolvers"
 import Components from "unplugin-vue-components/vite"
 import { defineConfig, loadEnv } from "vite"
 
-// Configuring Vite: https://cn.vite.dev/config
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "") as ImportMetaEnv
-  const { VITE_PUBLIC_PATH, VITE_PROXY_TARGET } = env
+  const env = loadEnv(mode, process.cwd(), "")
+  const publicPath = env.VITE_PUBLIC_PATH || "/"
+  const proxyTarget = env.DEV_PROXY_TARGET || "http://127.0.0.1:8080"
 
   return {
-    base: VITE_PUBLIC_PATH,
+    base: publicPath,
     resolve: {
       alias: {
         "@": resolve(__dirname, "src"),
@@ -25,30 +25,15 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 3333,
-      strictPort: false,
       open: true,
       proxy: {
         "/api": {
-          target: VITE_PROXY_TARGET || "http://127.0.0.1:8080",
-          ws: false,
+          target: proxyTarget,
           changeOrigin: true,
           rewrite: path => path.replace(/^\/api/, "")
         }
-      },
-      cors: true
+      }
     },
-    build: {
-      reportCompressedSize: false,
-      chunkSizeWarningLimit: 2048
-    },
-    esbuild:
-      mode === "development"
-        ? undefined
-        : {
-            pure: ["console.log"],
-            drop: ["debugger"],
-            legalComments: "none"
-          },
     plugins: [
       vue(),
       SvgComponent({
@@ -77,12 +62,7 @@ export default defineConfig(({ mode }) => {
     ],
     test: {
       include: ["tests/**/*.test.{ts,js}"],
-      environment: "happy-dom",
-      server: {
-        deps: {
-          inline: ["element-plus"]
-        }
-      }
+      environment: "happy-dom"
     }
   }
 })

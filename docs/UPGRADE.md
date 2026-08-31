@@ -99,7 +99,7 @@
 
 1. 以本模板 `0.1.0` 为新壳，业务页面按域迁入 `src/pages`
 2. 认证改为 `AuthApi` 适配层，去掉业务专属错误码硬编码（或收敛到适配层）
-3. 环境变量去掉 MQTT / 图片内网地址等；代理目标改为 `VITE_PROXY_TARGET`
+3. 环境变量去掉 MQTT / 图片内网地址等；代理目标改为 `DEV_PROXY_TARGET`
 4. 用 Swagger 重新生成 API，手写接口与生成模块分离
 5. 对照本模板 demo CRUD 校验 CustomTable / Form / Dialog 用法
 

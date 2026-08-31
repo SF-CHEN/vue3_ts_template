@@ -1,100 +1,69 @@
 <script lang="ts" setup>
 import type { ScrollPaneProps } from "./types"
-import Screenfull from "@@/components/Screenfull/index.vue"
-import { useSettingsStore } from "@/pinia/stores/settings"
 
 const props = defineProps<ScrollPaneProps>()
-
 const route = useRoute()
 
-const settingsStore = useSettingsStore()
-
-/** 滚动条组件元素的引用 */
 const scrollbarRef = useTemplateRef("scrollbarRef")
-
-/** 滚动条内容元素的引用 */
 const scrollbarContentRef = useTemplateRef("scrollbarContentRef")
 
-/** 当前滚动条距离左边的距离 */
 let currentScrollLeft = 0
-
-/** 每次滚动距离 */
 const translateDistance = 200
 
-/** 滚动时触发 */
 function scroll({ scrollLeft }: { scrollLeft: number }) {
   currentScrollLeft = scrollLeft
 }
 
-/** 鼠标滚轮滚动时触发 */
 function wheelScroll({ deltaY }: WheelEvent) {
-  if (deltaY.toString().startsWith("-")) {
-    scrollTo("left")
-  } else {
-    scrollTo("right")
-  }
+  scrollTo(deltaY < 0 ? "left" : "right")
 }
 
-/** 获取可能需要的宽度 */
 function getWidth() {
-  // 可滚动内容的长度
-  const scrollbarContentRefWidth = scrollbarContentRef.value!.clientWidth
-  // 滚动可视区宽度
-  const scrollbarRefWidth = scrollbarRef.value!.wrapRef!.clientWidth
-  // 最后剩余可滚动的宽度
-  const lastDistance = scrollbarContentRefWidth - scrollbarRefWidth - currentScrollLeft
-
-  return { scrollbarContentRefWidth, scrollbarRefWidth, lastDistance }
+  const contentWidth = scrollbarContentRef.value!.clientWidth
+  const viewportWidth = scrollbarRef.value!.wrapRef!.clientWidth
+  const remainingWidth = contentWidth - viewportWidth - currentScrollLeft
+  return { contentWidth, viewportWidth, remainingWidth }
 }
 
-/** 左右滚动 */
-function scrollTo(direction: "left" | "right", distance: number = translateDistance) {
-  let scrollLeft = 0
-  const { scrollbarContentRefWidth, scrollbarRefWidth, lastDistance } = getWidth()
-  // 没有横向滚动条，直接结束
-  if (scrollbarRefWidth > scrollbarContentRefWidth) return
-  if (direction === "left") {
-    scrollLeft = Math.max(0, currentScrollLeft - distance)
-  } else {
-    scrollLeft = Math.min(currentScrollLeft + distance, currentScrollLeft + lastDistance)
-  }
+function scrollTo(direction: "left" | "right", distance = translateDistance) {
+  const { contentWidth, viewportWidth, remainingWidth } = getWidth()
+  if (viewportWidth >= contentWidth) return
+
+  const scrollLeft = direction === "left"
+    ? Math.max(0, currentScrollLeft - distance)
+    : Math.min(currentScrollLeft + distance, currentScrollLeft + remainingWidth)
+
   scrollbarRef.value!.setScrollLeft(scrollLeft)
 }
 
-/** 移动到目标位置 */
 function moveTo() {
-  const tagRefs = props.tagRefs!
-  for (let i = 0; i < tagRefs.length; i++) {
-    // @ts-expect-error ignore
-    if (route.path === tagRefs[i].$props.to.path) {
-      // @ts-expect-error ignore
-      const el: HTMLElement = tagRefs[i].$el
-      const offsetWidth = el.offsetWidth
-      const offsetLeft = el.offsetLeft
-      const { scrollbarRefWidth } = getWidth()
-      // 当前 tag 在可视区域左边时
-      if (offsetLeft < currentScrollLeft) {
-        const distance = currentScrollLeft - offsetLeft
-        scrollTo("left", distance)
-        return
-      }
-      // 当前 tag 在可视区域右边时
-      const width = scrollbarRefWidth + currentScrollLeft - offsetWidth
-      if (offsetLeft > width) {
-        const distance = offsetLeft - width
-        scrollTo("right", distance)
-        return
-      }
+  const tagRefs = props.tagRefs ?? []
+
+  for (const tagRef of tagRefs) {
+    // RouterLink 的实例类型没有暴露渲染元素和 to.path，这里只在标签滚动定位时读取。
+    // @ts-expect-error RouterLink public instance does not expose $props.to.path
+    if (route.path !== tagRef.$props.to.path) continue
+
+    // @ts-expect-error RouterLink public instance does not expose $el
+    const el: HTMLElement = tagRef.$el
+    const { viewportWidth } = getWidth()
+
+    if (el.offsetLeft < currentScrollLeft) {
+      scrollTo("left", currentScrollLeft - el.offsetLeft)
+      return
+    }
+
+    const visibleRight = viewportWidth + currentScrollLeft - el.offsetWidth
+    if (el.offsetLeft > visibleRight) {
+      scrollTo("right", el.offsetLeft - visibleRight)
+      return
     }
   }
 }
 
-// 监听路由变化，移动到目标位置
 watch(
   () => route.fullPath,
-  () => {
-    nextTick(moveTo)
-  }
+  () => nextTick(moveTo)
 )
 </script>
 
@@ -105,7 +74,7 @@ watch(
         <span class="i-ep-arrow-left" />
       </el-icon>
     </el-tooltip>
-    <el-scrollbar ref="scrollbarRef" @wheel.passive="wheelScroll" @scroll="scroll" wrap-class="scrollbar-wrap">
+    <el-scrollbar ref="scrollbarRef" wrap-class="scrollbar-wrap" @wheel.passive="wheelScroll" @scroll="scroll">
       <div ref="scrollbarContentRef" class="scrollbar-content">
         <slot />
       </div>
@@ -115,7 +84,6 @@ watch(
         <span class="i-ep-arrow-right" />
       </el-icon>
     </el-tooltip>
-    <Screenfull v-if="settingsStore.showScreenfull" :content="true" class="screenfull" />
   </div>
 </template>
 
@@ -125,36 +93,34 @@ watch(
   user-select: none;
   display: flex;
   justify-content: space-between;
+
   .arrow {
     width: 40px;
     height: 100%;
     font-size: 18px;
     cursor: pointer;
+
     &.left {
       box-shadow: 5px 0 5px -6px var(--el-border-color-darker);
     }
+
     &.right {
       box-shadow: -5px 0 5px -6px var(--el-border-color-darker);
     }
   }
+
   .el-scrollbar {
     flex: 1;
-    // 防止换行（超出宽度时，显示滚动条）
     white-space: nowrap;
+
     :deep(.scrollbar-wrap) {
       display: flex;
       align-items: center;
     }
+
     .scrollbar-content {
       display: inline-block;
     }
-  }
-  .screenfull {
-    width: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
   }
 }
 </style>

@@ -3,9 +3,6 @@ import { ROLE_ADMIN, ROLE_USER } from "@@/constants/roles"
 import { getToken } from "@@/utils/local-storage"
 import { request } from "@/http/axios"
 
-/**
- * 是否启用本地 Mock。Mock 模式和真实 API 模式完全独立。
- */
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true"
 
 /** Mock 账号：admin / 任意密码 → 管理员；user / 任意密码 → 普通用户 */
@@ -14,7 +11,17 @@ const MOCK_USERS: Record<string, CurrentUser> = {
     id: 1,
     username: "admin",
     roles: [ROLE_ADMIN],
-    permissions: ["demo:article:list", "demo:article:create", "demo:article:edit", "demo:article:delete"]
+    permissions: [
+      "demo:article:list",
+      "demo:article:create",
+      "demo:article:edit",
+      "demo:article:delete",
+      "demo:user:list",
+      "demo:user:create",
+      "demo:user:edit",
+      "demo:user:delete",
+      "demo:file:transfer"
+    ]
   },
   user: {
     id: 2,
@@ -53,28 +60,16 @@ const mockAuthApi: AuthApi = {
   }
 }
 
-/** 真实后端适配示例：按项目协议改路径与字段映射即可 */
+/** 真实后端适配示例：按项目协议改路径与字段映射即可。 */
 const realAuthApi: AuthApi = {
-  async login(input: LoginInput): Promise<LoginResult> {
-    const res = await request<ApiResponseData<LoginResult>>({
-      url: "/auth/login",
-      method: "post",
-      data: input
-    })
-    return res.data
+  login(input) {
+    return request<LoginResult>({ url: "/auth/login", method: "post", data: input })
   },
-  async getCurrentUser(): Promise<CurrentUser> {
-    const res = await request<ApiResponseData<CurrentUser>>({
-      url: "/auth/me",
-      method: "get"
-    })
-    return res.data
+  getCurrentUser() {
+    return request<CurrentUser>({ url: "/auth/me", method: "get" })
   },
-  async logout(): Promise<void> {
-    await request<ApiResponseData<null>>({
-      url: "/auth/logout",
-      method: "post"
-    })
+  async logout() {
+    await request<void>({ url: "/auth/logout", method: "post" })
   }
 }
 

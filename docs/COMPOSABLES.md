@@ -1,10 +1,10 @@
 # 内置组合式函数速查 (Composables)
 
-项目在 `src/common/composables` 目录下提供通用组合式函数，通过路径别名 `@@/composables/` 导入。
+`src/common/composables` 只保留确实跨页面复用、并且具有组合式状态或生命周期价值的能力。普通函数优先放页面本地或 `utils`，不要为了形式创建 composable。
 
 ## 设备检测 `useDevice`
 
-判断当前设备类型（移动端 / 桌面端），基于 `appStore.device`。
+读取布局的移动端 / 桌面端状态。
 
 ```ts
 import { useDevice } from "@@/composables/useDevice"
@@ -18,44 +18,28 @@ if (isMobile.value) {
 
 ## 动态标题 `useTitle`
 
-动态设置浏览器标签页标题，格式为 `项目名 | 页面名`。
+设置浏览器标签页标题，格式为 `项目名 | 页面名`。
 
 ```ts
 import { useTitle } from "@@/composables/useTitle"
 
 const { setTitle } = useTitle()
 
-// 设置标题为 "项目名 | 用户管理"
 setTitle("用户管理")
-
-// 重置为项目默认标题
-setTitle()
+setTitle() // 恢复项目默认标题
 ```
 
 ## 水印 `useWatermark`
 
-为页面或指定容器添加水印，支持防御防篡改。
+为 `body` 或指定容器添加水印，可选防删除 / 防样式篡改。
 
 ```ts
 import { useWatermark } from "@@/composables/useWatermark"
 
 const { clearWatermark, setWatermark } = useWatermark()
 
-// 挂载到 body
 setWatermark("内部使用")
-
-// 清除水印
 clearWatermark()
 ```
 
-## 灰色模式与色弱模式 `useGreyAndColorWeakness`
-
-初始化灰色模式和色弱模式，基于 `settingsStore` 的配置。
-
-```ts
-import { useGreyAndColorWeakness } from "@@/composables/useGreyAndColorWeakness"
-
-const { initGreyAndColorWeakness } = useGreyAndColorWeakness()
-
-initGreyAndColorWeakness()
-```
+布局是否启用水印、灰色模式、色弱模式等项目级能力统一在 `src/layouts/config.ts` 静态配置，不为这些固定开关创建额外 Store 或 composable。

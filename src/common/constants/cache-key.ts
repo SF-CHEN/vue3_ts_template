@@ -1,11 +1,8 @@
 const SYSTEM_NAME = "vue-admin-template"
 
-/** 缓存数据时用到的 Key */
-export class CacheKey {
-  static readonly TOKEN = `${SYSTEM_NAME}-token-key`
-  static readonly USER_PROFILE = `${SYSTEM_NAME}-user-profile-key`
-  static readonly CONFIG_LAYOUT = `${SYSTEM_NAME}-config-layout-key`
-  static readonly SIDEBAR_STATUS = `${SYSTEM_NAME}-sidebar-status-key`
-  static readonly VISITED_VIEWS = `${SYSTEM_NAME}-visited-views-key`
-  static readonly CACHED_VIEWS = `${SYSTEM_NAME}-cached-views-key`
-}
+export const CacheKey = {
+  TOKEN: `${SYSTEM_NAME}-token-key`,
+  SIDEBAR_STATUS: `${SYSTEM_NAME}-sidebar-status-key`,
+  VISITED_VIEWS: `${SYSTEM_NAME}-visited-views-key`,
+  CACHED_VIEWS: `${SYSTEM_NAME}-cached-views-key`
+} as const

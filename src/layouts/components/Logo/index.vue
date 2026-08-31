@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import type { LogoProps } from "../../types"
-
-const { collapse = true } = defineProps<LogoProps>()
+const { collapse = true } = defineProps<{
+  collapse?: boolean
+}>()
 </script>
 
 <template>
