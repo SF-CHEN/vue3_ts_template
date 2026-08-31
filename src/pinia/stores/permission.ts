@@ -31,18 +31,11 @@ export const usePermissionStore = defineStore("permission", () => {
   const routes = ref<RouteRecordRaw[]>([])
   const addRoutes = ref<RouteRecordRaw[]>([])
 
-  const applyRoutes = (accessedRoutes: RouteRecordRaw[]) => {
-    routes.value = [...constantRoutes, ...accessedRoutes]
-    addRoutes.value = accessedRoutes
-  }
-
   const setRoutes = (userPermissionInfo: UserPermissionInfo) => {
-    applyRoutes(filterDynamicRoutes(dynamicRoutes, userPermissionInfo))
+    const accessibleRoutes = filterDynamicRoutes(dynamicRoutes, userPermissionInfo)
+    routes.value = [...constantRoutes, ...accessibleRoutes]
+    addRoutes.value = accessibleRoutes
   }
 
-  const setAllRoutes = () => {
-    applyRoutes(dynamicRoutes)
-  }
-
-  return { routes, addRoutes, setRoutes, setAllRoutes }
+  return { routes, addRoutes, setRoutes }
 })
