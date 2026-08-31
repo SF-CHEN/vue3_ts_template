@@ -16,7 +16,9 @@ type BuiltInFieldValue
     | number
     | boolean
     | Date
-    | (string | number | boolean | Date)[]
+    | (string | number)[]
+    | (string | number | boolean)[]
+    | (string | number | Date)[]
     | undefined
 
 const props = withDefaults(defineProps<{
