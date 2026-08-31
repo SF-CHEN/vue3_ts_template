@@ -13,9 +13,11 @@
 ```bash
 cd template
 pnpm i
-pnpm run init -- -ProjectTitle 示例后台
+pnpm run init -- --title 示例后台
 pnpm dev
 ```
+
+`init` 使用 Node.js，可在 Windows、macOS、Linux 运行；默认根据项目文件夹名初始化包名，也兼容旧参数 `-ProjectTitle`。
 
 常用命令：
 
@@ -41,6 +43,7 @@ pnpm api:doc            # 生成接口文档摘要
 - 先找已有相似实现，再新增代码。
 - 普通需求优先控制在 1～3 个文件内完成。
 - 普通 CRUD 表单优先直接使用 Element Plus；只有动态/schema 驱动表单再使用 `CustomForm`。
+- `CustomForm` 只保留固定内置字段；额外字段使用 slot，不新增运行时字段 registry。
 - `CustomTable` 只负责常规列、loading、selection/index 和 pagination；特殊单元格使用 Vue slot。
 - 不为未来需求提前抽象，不默认新增 Service / Repository / Factory / Registry / Event Bus 等层。
 - `eslint.config.js` 是代码风格的唯一事实来源，不在提示词里重复维护格式规则。
@@ -75,7 +78,7 @@ src
 ├─ pinia            # 跨页面共享状态
 └─ router
 script
-├─ init-project.ps1
+├─ init-project.mjs
 ├─ load-swagger.cjs
 ├─ generate-api.cjs
 └─ doc.cjs
@@ -88,6 +91,27 @@ script
 布局功能统一在 `src/layouts/config.ts` 配置，例如 TagsView、Logo、固定 Header、Footer、全屏按钮、水印等。
 
 这些选项是**静态项目配置**，模板默认不提供运行时 Settings Drawer，也不把布局选项写入 Pinia / localStorage。需要某项能力时直接修改配置文件，避免为简单模板维护一套额外的配置管理系统。
+
+## 请求约定
+
+`src/http/axios.ts` 统一处理 Token、通用错误和 `{ code, data, message }` 响应包。业务 API 的 `request<T>()` 直接返回 `data`：
+
+```ts
+return request<User>({
+  url: "/users/1",
+  method: "get"
+})
+```
+
+页面和 API 不再重复 `.then(res => res.data)`，也不需要全局 `ApiResponseData<T>`。
+
+## 环境变量
+
+- `VITE_*`：浏览器端可访问配置。
+- `DEV_PROXY_TARGET`：仅 Vite 开发服务器读取的代理地址。
+- `SWAGGER_URL`：仅 Node API 生成脚本读取。
+
+不要把密钥、内网凭证等敏感信息放进 `VITE_*` 变量。
 
 ## Swagger API 生成
 
@@ -114,10 +138,10 @@ pnpm api:doc
 
 ## 接入真实后端
 
-1. `.env.development` 中设置 `VITE_PROXY_TARGET` 为后端地址。
+1. `.env.development` 中设置 `DEV_PROXY_TARGET` 为后端地址。
 2. `.env` / `.env.production` 中设置 `VITE_USE_MOCK=false`。
 3. 按后端协议修改 `src/common/apis/auth.ts` 中的 `realAuthApi`（路径、字段、Token 头）。
-4. 如需改响应约定（`code === 0`），调整 `src/http/axios.ts`。
+4. 如需改响应约定（默认 `code === 0`），调整 `src/http/axios.ts`。
 5. 配置 `SWAGGER_URL` 后执行 `pnpm api:generate` 生成业务接口。
 
 认证契约：
