@@ -58,6 +58,8 @@ defineSlots<{
 }>()
 
 const attrs = useAttrs()
+
+// 未显式声明的 Element Plus Table 属性继续透传，避免 CustomTable 重复包装全部原生能力。
 const tableAttrs = computed(() =>
   Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "selection"))
 )
@@ -83,6 +85,7 @@ function columnKey(column: TableColumn<T>) {
 }
 
 function toTableRow(row: unknown) {
+  // Element Plus 的作用域行类型是 unknown，这里只在组件边界收窄一次，避免 any 向业务页面扩散。
   return row as T
 }
 
@@ -124,6 +127,8 @@ function resolveColumnBind(column: TableColumn<T>) {
 
 function resolveShowTip(column: TableColumn<T>) {
   if (column.showTip !== undefined) return column.showTip
+
+  // slot / selection / index 已有自定义展示方式，不默认再套文本 tooltip。
   if (column.type || column.slot) return false
   return props.showTip
 }
@@ -181,6 +186,7 @@ defineExpose({
         </template>
 
         <template v-else-if="column.type !== 'selection'" #default="scope">
+          <!-- 复杂业务单元格通过 slot 扩展，columns 只保留普通列配置。 -->
           <slot
             :name="column.slot || column.prop"
             :row="toTableRow(scope.row)"
