@@ -8,42 +8,25 @@ import { resolveRoutePath } from "@/router/helper"
 import ScrollPane from "./ScrollPane.vue"
 
 const router = useRouter()
-
 const route = useRoute()
-
 const tagsViewStore = useTagsViewStore()
-
 const permissionStore = usePermissionStore()
 
-/** 标签页组件元素的引用数组 */
 const tagRefs = useTemplateRef<InstanceType<typeof RouterLink>[]>("tagRefs")
-
-/** 右键菜单的状态 */
 const visible = ref(false)
-
-/** 右键菜单的 top 位置 */
 const top = ref(0)
-
-/** 右键菜单的 left 位置 */
 const left = ref(0)
-
-/** 当前正在右键操作的标签页 */
 const selectedTag = ref<TagView>({})
-
-/** 固定的标签页 */
 let affixTags: TagView[] = []
 
-/** 判断标签页是否激活 */
 function isActive(tag: TagView) {
   return tag.path === route.path
 }
 
-/** 判断标签页是否固定 */
 function isAffix(tag: TagView) {
   return tag.meta?.affix
 }
 
-/** 筛选出固定标签页 */
 function filterAffixTags(routes: RouteRecordRaw[], basePath = "/") {
   const tags: TagView[] = []
   routes.forEach((route) => {
@@ -64,36 +47,34 @@ function filterAffixTags(routes: RouteRecordRaw[], basePath = "/") {
   return tags
 }
 
-/** 初始化标签页 */
 function initTags() {
+  // 固定标签来自当前用户已经过滤后的可访问路由，避免把无权限页面提前放进标签栏。
   affixTags = filterAffixTags(permissionStore.routes)
   for (const tag of affixTags) {
-    // 必须含有 name 属性
     tag.name && tagsViewStore.addVisitedView(tag)
   }
 }
 
-/** 添加标签页 */
 function addTags(targetRoute: RouteLocationNormalizedGeneric) {
+  // 匿名路由无法可靠参与 keepAlive 和标签识别，因此只记录具名页面。
   if (targetRoute.name) {
     tagsViewStore.addVisitedView(targetRoute)
   }
 }
 
-/** 刷新当前正在右键操作的标签页 */
 function refreshSelectedTag(view: TagView) {
+  // 先移除 keepAlive 缓存，再走 redirect 中转页，才能真正重新创建当前页面实例。
   tagsViewStore.delCachedView(view)
   router.replace({ path: `${REDIRECT_PATH}${view.path}`, query: view.query })
 }
 
-/** 关闭当前正在右键操作的标签页 */
 function closeSelectedTag(view: TagView) {
+  // 关闭标签时同步清理缓存，避免页面虽然不可见但组件实例仍长期保留。
   tagsViewStore.delVisitedView(view)
   tagsViewStore.delCachedView(view)
   isActive(view) && toLastView(tagsViewStore.visitedViews, view)
 }
 
-/** 关闭其他标签页 */
 function closeOthersTags() {
   const fullPath = selectedTag.value.fullPath
   if (fullPath !== route.path && fullPath !== undefined) {
@@ -103,7 +84,6 @@ function closeOthersTags() {
   tagsViewStore.delOthersCachedViews(selectedTag.value)
 }
 
-/** 关闭所有标签页 */
 function closeAllTags(view: TagView) {
   tagsViewStore.delAllVisitedViews()
   tagsViewStore.delAllCachedViews()
@@ -111,41 +91,31 @@ function closeAllTags(view: TagView) {
   toLastView(tagsViewStore.visitedViews, view)
 }
 
-/** 跳转到最后一个标签页 */
 function toLastView(visitedViews: TagView[], view: TagView) {
   const latestView = visitedViews.slice(-1)[0]
   const fullPath = latestView?.fullPath
   if (fullPath !== undefined) {
     router.push(fullPath)
+  } else if (view.path === DASHBOARD_PATH) {
+    // 首页没有可回退标签时仍通过 redirect 刷新，避免复用已关闭的页面实例。
+    router.push({ path: `${REDIRECT_PATH}${view.path}`, query: view.query })
   } else {
-    // 如果 TagsView 全部被关闭了，则默认重定向到主页
-    if (view.path === DASHBOARD_PATH) {
-      // 重新加载主页
-      router.push({ path: `${REDIRECT_PATH}${view.path}`, query: view.query })
-    } else {
-      router.push("/")
-    }
+    router.push("/")
   }
 }
 
-/** 打开右键菜单面板 */
 function openMenu(tag: TagView, e: MouseEvent) {
   const menuMinWidth = 100
-  // 当前页面宽度
-  const offsetWidth = document.body.offsetWidth
-  // 面板的最大左边距
-  const maxLeft = offsetWidth - menuMinWidth
-  // 面板距离鼠标指针的距离
-  const left15 = e.clientX + 10
-  left.value = left15 > maxLeft ? maxLeft : left15
+  const maxLeft = document.body.offsetWidth - menuMinWidth
+  const preferredLeft = e.clientX + 10
+
+  // 限制右键菜单不超出视口，避免靠右的标签打开菜单后被裁切。
+  left.value = preferredLeft > maxLeft ? maxLeft : preferredLeft
   top.value = e.clientY
-  // 显示面板
   visible.value = true
-  // 更新当前正在右键操作的标签页
   selectedTag.value = tag
 }
 
-/** 关闭右键菜单面板 */
 function closeMenu() {
   visible.value = false
 }
@@ -156,7 +126,6 @@ watch(visible, (value) => {
 
 initTags()
 
-// 监听路由变化
 watch(
   () => route.path,
   () => {
