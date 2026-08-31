@@ -31,6 +31,7 @@ const model = defineModel<Record<string, unknown>>({ default: () => ({}) })
 const formRef = useTemplateRef<FormInstance>("formRef")
 const attrs = useAttrs()
 
+// schema 只描述动态表单本身，额外业务校验通过 extraRules 合并，避免修改 schema 源数据。
 const { rules } = useFormRules(
   () => props.schema,
   () => props.extraRules ?? {},
@@ -38,6 +39,7 @@ const { rules } = useFormRules(
 )
 const visibleSchema = useVisibleSchema(() => props.schema, model)
 
+// Element Plus 原生表单属性继续透传；labelWidth 单独处理是为了兼容两种属性写法。
 const formAttrs = computed(() =>
   Object.fromEntries(
     Object.entries(attrs).filter(([key]) => !["labelWidth", "label-width"].includes(key))
@@ -50,6 +52,7 @@ const labelWidth = computed<string | number | undefined>(() => {
 })
 
 function onFieldChange(prop: string, value: unknown) {
+  // 创建新对象而不是直接修改属性，确保 v-model 使用方能收到清晰的模型更新。
   model.value = { ...model.value, [prop]: value }
   emit("change", prop, value)
 }
@@ -89,6 +92,7 @@ defineExpose({ validate, clearValidate, resetFields, formRef })
           :options="options"
           @field-change="onFieldChange"
         >
+          <!-- schema 之外的特殊业务控件通过字段同名 slot 扩展，不新增运行时字段 registry。 -->
           <template v-if="$slots[item.prop]" #default="slotProps">
             <slot :name="item.prop" v-bind="slotProps" />
           </template>
