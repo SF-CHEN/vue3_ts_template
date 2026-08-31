@@ -43,6 +43,7 @@ const formRules = {
   status: [{ required: true, message: "请选择状态", trigger: "change" }]
 }
 
+// 权限直接映射到页面动作，避免在模板中散落角色判断。
 const canCreate = computed(() => checkPermission(["demo:article:create"]))
 const canEdit = computed(() => checkPermission(["demo:article:edit"]))
 const canDelete = computed(() => checkPermission(["demo:article:delete"]))
@@ -59,6 +60,7 @@ const columns: TableColumn<ArticleItem>[] = [
 async function getTableData() {
   loading.value = true
   try {
+    // 查询条件保持原对象，分页参数单独提交，便于分页组件复用同一查询逻辑。
     const res = await fetchArticlePage({
       pageCurrent: pagination.pageCurrent ?? 1,
       pageSize: pagination.pageSize ?? 10,
@@ -72,6 +74,7 @@ async function getTableData() {
 }
 
 function handleSearch() {
+  // 查询条件变化后回到第一页，避免旧页码超出新的结果范围。
   pagination.pageCurrent = 1
   getTableData()
 }
@@ -88,11 +91,13 @@ function resetForm() {
 
 function handleCreate() {
   resetForm()
+  // 新增文章默认带入当前登录人，减少重复输入，同时仍允许用户修改。
   formData.author = userStore.username || "anonymous"
   dialogVisible.value = true
 }
 
 function handleUpdate(row: ArticleItem) {
+  // 只复制编辑表单需要的字段，避免把列表展示字段意外提交给后端。
   Object.assign(formData, {
     id: row.id,
     title: row.title,
@@ -113,6 +118,7 @@ async function handleSubmit() {
 
   loading.value = true
   try {
+    // 是否存在 id 作为新增/编辑的唯一分支条件，避免再维护额外模式状态。
     if (formData.id === undefined) {
       await createArticle({ ...formData })
       ElMessage.success("新增成功")
@@ -131,6 +137,7 @@ async function handleSubmit() {
 
 async function handleDelete(row: ArticleItem) {
   try {
+    // 删除属于不可逆操作，先在页面层完成明确确认再调用接口。
     await ElMessageBox.confirm(`确认删除「${row.title}」吗？`, "系统提示", {
       confirmButtonText: "确定",
       cancelButtonText: "取消",
