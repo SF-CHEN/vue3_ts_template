@@ -57,7 +57,7 @@ function handleLogout() {
         <button
           v-if="isSubPage"
           type="button"
-          class="back-button"
+          class="page-action"
           title="返回上一页"
           @click="goBack"
         >
@@ -66,18 +66,15 @@ function handleLogout() {
         <button
           v-else
           type="button"
-          class="home-button"
+          class="page-action"
           title="返回首页"
           @click="goHome"
         >
           <span class="i-ep-house" />
         </button>
-        <div class="title-group">
-          <span class="title-caption">WORKSPACE</span>
-          <h2 class="page-title">
-            {{ pageTitle }}
-          </h2>
-        </div>
+        <h2 class="page-title">
+          {{ pageTitle }}
+        </h2>
       </div>
     </div>
 
@@ -134,21 +131,23 @@ function handleLogout() {
 }
 
 .header-action,
-.back-button,
-.home-button {
-  width: 36px;
-  height: 36px;
+.page-action {
   padding: 0;
-  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--app-border);
-  border-radius: 9px;
+  flex-shrink: 0;
   color: var(--app-secondary);
-  background: #ffffff;
   cursor: pointer;
   transition: var(--app-transition);
+}
+
+.header-action {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--app-border);
+  border-radius: 9px;
+  background: #ffffff;
 
   &:hover {
     color: var(--app-primary);
@@ -159,35 +158,25 @@ function handleLogout() {
 
 .page-heading {
   min-width: 0;
-  gap: 10px;
+  gap: 9px;
 }
 
-.back-button,
-.home-button {
-  width: 32px;
-  height: 32px;
+.page-action {
+  width: 28px;
+  height: 28px;
   border: none;
+  border-radius: 7px;
   background: transparent;
-  font-size: 18px;
-}
+  font-size: 17px;
 
-.title-group {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.title-caption {
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-  color: #94a3b8;
-  letter-spacing: 0.12em;
+  &:hover {
+    color: var(--app-primary);
+    background: var(--app-primary-light);
+  }
 }
 
 .page-title {
-  max-width: 46vw;
+  max-width: 48vw;
   margin: 0;
   overflow: hidden;
   color: var(--app-dark);
@@ -278,14 +267,13 @@ function handleLogout() {
     padding: 0 14px;
   }
 
-  .title-caption,
   .user-meta,
   .user-arrow {
     display: none;
   }
 
   .page-title {
-    max-width: 42vw;
+    max-width: 44vw;
     font-size: 16px;
   }
 
