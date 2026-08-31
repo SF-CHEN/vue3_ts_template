@@ -163,7 +163,7 @@ $transition-time: 0.24s;
     padding-top: calc(var(--v3-navigationbar-height) + 16px);
   }
 
-  &.has-tags-view .fixed-header + .app-main {
+  .has-tags-view .fixed-header + .app-main {
     padding-top: calc(var(--v3-header-height) + 16px);
   }
 }
