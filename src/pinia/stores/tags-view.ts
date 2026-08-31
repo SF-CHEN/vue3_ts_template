@@ -7,28 +7,27 @@ import {
   setCachedViews,
   setVisitedViews
 } from "@@/utils/local-storage"
-import { useSettingsStore } from "./settings"
+import { layoutsConfig } from "@/layouts/config"
 
 export type TagView = Partial<RouteLocationNormalizedGeneric>
 
 export const useTagsViewStore = defineStore("tags-view", () => {
-  const settingsStore = useSettingsStore()
-  const visitedViews = ref<TagView[]>(settingsStore.cacheTagsView ? getVisitedViews() : [])
-  const cachedViews = ref<string[]>(settingsStore.cacheTagsView ? getCachedViews() : [])
+  const visitedViews = ref<TagView[]>(layoutsConfig.cacheTagsView ? getVisitedViews() : [])
+  const cachedViews = ref<string[]>(layoutsConfig.cacheTagsView ? getCachedViews() : [])
 
-  watch(
-    [visitedViews, cachedViews, () => settingsStore.cacheTagsView],
-    () => {
-      if (!settingsStore.cacheTagsView) {
-        removeVisitedViews()
-        removeCachedViews()
-        return
-      }
-      setVisitedViews(visitedViews.value)
-      setCachedViews(cachedViews.value)
-    },
-    { deep: true, immediate: true }
-  )
+  if (layoutsConfig.cacheTagsView) {
+    watch(
+      [visitedViews, cachedViews],
+      () => {
+        setVisitedViews(visitedViews.value)
+        setCachedViews(cachedViews.value)
+      },
+      { deep: true }
+    )
+  } else {
+    removeVisitedViews()
+    removeCachedViews()
+  }
 
   const addVisitedView = (view: TagView) => {
     const index = visitedViews.value.findIndex(item => item.path === view.path)
@@ -43,9 +42,7 @@ export const useTagsViewStore = defineStore("tags-view", () => {
 
   const addCachedView = (view: TagView) => {
     if (typeof view.name !== "string" || !view.meta?.keepAlive) return
-    if (!cachedViews.value.includes(view.name)) {
-      cachedViews.value.push(view.name)
-    }
+    if (!cachedViews.value.includes(view.name)) cachedViews.value.push(view.name)
   }
 
   const delVisitedView = (view: TagView) => {
