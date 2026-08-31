@@ -30,10 +30,6 @@ function goBack() {
   router.push(typeof activeMenu === "string" && activeMenu ? activeMenu : "/")
 }
 
-function goHome() {
-  router.push("/dashboard")
-}
-
 function handleLogout() {
   ElMessageBox.confirm("确定退出登录吗?", "退出登录", {
     confirmButtonText: "确定退出",
@@ -53,29 +49,19 @@ function handleLogout() {
         <Hamburger :is-active="appStore.sidebar.opened" />
       </button>
 
-      <div class="page-heading">
-        <button
-          v-if="isSubPage"
-          type="button"
-          class="page-action"
-          title="返回上一页"
-          @click="goBack"
-        >
-          <span class="i-ep-arrow-left" />
-        </button>
-        <button
-          v-else
-          type="button"
-          class="page-action"
-          title="返回首页"
-          @click="goHome"
-        >
-          <span class="i-ep-house" />
-        </button>
-        <h2 class="page-title">
-          {{ pageTitle }}
-        </h2>
-      </div>
+      <button
+        v-if="isSubPage"
+        type="button"
+        class="back-action"
+        title="返回上一页"
+        @click="goBack"
+      >
+        <span class="i-ep-arrow-left" />
+      </button>
+
+      <h2 class="page-title">
+        {{ pageTitle }}
+      </h2>
     </div>
 
     <div class="right-menu">
@@ -117,7 +103,6 @@ function handleLogout() {
 }
 
 .header-left,
-.page-heading,
 .right-menu,
 .user-trigger {
   display: flex;
@@ -127,46 +112,41 @@ function handleLogout() {
 .header-left {
   min-width: 0;
   flex: 1;
-  gap: 14px;
+  gap: 10px;
 }
 
 .header-action,
-.page-action {
+.back-action {
+  appearance: none;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  border: none;
+  outline: none;
   color: var(--app-secondary);
+  background: transparent;
   cursor: pointer;
   transition: var(--app-transition);
 }
 
 .header-action {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--app-border);
-  border-radius: 9px;
-  background: #ffffff;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
 
   &:hover {
     color: var(--app-primary);
-    border-color: #bfdbfe;
     background: var(--app-primary-light);
   }
 }
 
-.page-heading {
-  min-width: 0;
-  gap: 9px;
-}
-
-.page-action {
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 7px;
-  background: transparent;
+.back-action {
+  width: 30px;
+  height: 30px;
+  margin-left: 2px;
+  border-radius: 8px;
   font-size: 17px;
 
   &:hover {
@@ -176,13 +156,14 @@ function handleLogout() {
 }
 
 .page-title {
-  max-width: 48vw;
-  margin: 0;
+  max-width: 52vw;
+  margin: 0 0 0 4px;
   overflow: hidden;
   color: var(--app-dark);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 650;
   line-height: 1.35;
+  letter-spacing: -0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -193,30 +174,43 @@ function handleLogout() {
 }
 
 .screenfull-btn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--app-border);
-  border-radius: 9px;
-  background: #ffffff;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
 }
 
 .user-trigger {
-  gap: 10px;
-  padding: 5px 8px 5px 6px;
-  border: 1px solid transparent;
-  border-radius: 10px;
+  appearance: none;
+  gap: 9px;
+  padding: 4px 6px;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  border-radius: 9px;
   color: inherit;
+  font: inherit;
   background: transparent;
   cursor: pointer;
   transition: var(--app-transition);
 
   &:hover {
-    border-color: var(--app-border);
     background: var(--app-bg-section);
   }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+:deep(.el-tooltip__trigger:focus-visible) {
+  outline: none;
 }
 
 .user-avatar {
@@ -226,10 +220,9 @@ function handleLogout() {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border-radius: 9px;
+  border-radius: 50%;
   color: #ffffff;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+  background: var(--app-primary);
   font-size: 12px;
   font-weight: 700;
 }
@@ -238,7 +231,8 @@ function handleLogout() {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  line-height: 1.25;
+  min-width: 0;
+  line-height: 1.2;
 }
 
 .user-name {
@@ -252,14 +246,16 @@ function handleLogout() {
 }
 
 .user-role {
-  margin-top: 2px;
+  margin-top: 3px;
   color: var(--app-text-secondary);
   font-size: 11px;
+  font-weight: 400;
 }
 
 .user-arrow {
+  margin-left: 1px;
   color: #94a3b8;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 @media screen and (max-width: 768px) {
@@ -273,12 +269,12 @@ function handleLogout() {
   }
 
   .page-title {
-    max-width: 44vw;
-    font-size: 16px;
+    max-width: 48vw;
+    font-size: 17px;
   }
 
   .user-trigger {
-    padding: 4px;
+    padding: 3px;
   }
 }
 </style>
