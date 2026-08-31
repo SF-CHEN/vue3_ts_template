@@ -29,6 +29,7 @@ const instance = axios.create({
 })
 
 instance.interceptors.request.use((config) => {
+  // Token 在请求层统一注入，页面和各 API 函数不重复关心认证头。
   const token = getToken()
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
@@ -37,6 +38,8 @@ instance.interceptors.request.use((config) => {
 instance.interceptors.response.use(
   (response) => {
     const responseType = response.config.responseType
+
+    // Blob / ArrayBuffer 不使用 JSON 业务包协议，必须保留原始二进制数据给调用方处理。
     if (responseType === "blob" || responseType === "arraybuffer") return response.data
     if (response.status === 204) return undefined
 
@@ -47,8 +50,10 @@ instance.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // 在这里统一解包后，业务 API 的 request<T>() 可以直接表示最终业务类型 T。
     if (apiData.code === 0) return apiData.data
 
+    // 业务码 401 与 HTTP 401 都视为会话过期，统一清理登录态和动态路由。
     if (apiData.code === 401) useUserStore().expireSession()
 
     const error = new Error(apiData.message || "请求失败")
