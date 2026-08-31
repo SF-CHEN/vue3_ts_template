@@ -35,12 +35,9 @@ const mockArticleApi = {
   async fetchPage(params: { pageCurrent: number, pageSize: number, query: ArticleQuery }) {
     const { pageCurrent, pageSize, query } = params
     let list = [...store]
-    if (query.title) {
-      list = list.filter(item => item.title.includes(query.title!.trim()))
-    }
-    if (query.status) {
-      list = list.filter(item => item.status === query.status)
-    }
+    if (query.title) list = list.filter(item => item.title.includes(query.title.trim()))
+    if (query.status) list = list.filter(item => item.status === query.status)
+
     const total = list.length
     const start = (pageCurrent - 1) * pageSize
     return delay({ records: list.slice(start, start + pageSize), total })
@@ -73,7 +70,7 @@ const mockArticleApi = {
 
 const realArticleApi = {
   fetchPage(params: { pageCurrent: number, pageSize: number, query: ArticleQuery }) {
-    return request<ApiResponseData<ArticlePage>>({
+    return request<ArticlePage>({
       url: "/articles",
       method: "get",
       params: {
@@ -81,16 +78,17 @@ const realArticleApi = {
         pageSize: params.pageSize,
         ...params.query
       }
-    }).then(res => res.data)
+    })
   },
   create(data: ArticleFormData) {
-    return request<ApiResponseData<ArticleItem>>({ url: "/articles", method: "post", data }).then(res => res.data)
+    return request<ArticleItem>({ url: "/articles", method: "post", data })
   },
   update(data: ArticleFormData) {
-    return request<ApiResponseData<ArticleItem>>({ url: `/articles/${data.id}`, method: "put", data }).then(res => res.data)
+    return request<ArticleItem>({ url: `/articles/${data.id}`, method: "put", data })
   },
-  delete(id: number) {
-    return request<ApiResponseData<null>>({ url: `/articles/${id}`, method: "delete" }).then(() => true)
+  async delete(id: number) {
+    await request<void>({ url: `/articles/${id}`, method: "delete" })
+    return true
   }
 }
 
