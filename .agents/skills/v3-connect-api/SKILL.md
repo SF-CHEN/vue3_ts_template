@@ -1,6 +1,6 @@
 ---
 name: v3-connect-api
-description: Connect, add, or modify backend APIs in this Vue 3 repository, including Swagger/OpenAPI generation, handwritten request modules, auth adapters, proxy settings, response envelopes, and API contract types.
+description: Connect, add, or modify backend APIs in this Vue 3 repository, including Swagger/OpenAPI generation, handwritten request modules, auth adapters, proxy settings, response envelopes, uploads, downloads, and API contract types.
 ---
 
 # Vue3 接口对接
@@ -40,6 +40,7 @@ pnpm api:generate
 - `VITE_BASE_URL`
 - Bearer Token
 - `{ code, data, message }` 解包
+- `blob` / `arraybuffer` 原始响应
 - 通用 HTTP / 业务错误提示
 - 401 会话失效
 
@@ -70,6 +71,7 @@ request<ApiResponseData<User>>(...).then(res => res.data)
 axios.get(...)
 ```
 
+不要为了上传 / 下载单独创建第二个 Axios 实例。
 不要为了每个模块创建 `service / repository / adapter` 中间层。
 
 ## 参数约定
@@ -78,7 +80,62 @@ axios.get(...)
 - POST / PUT / PATCH 请求体使用 `data`。
 - 页面字段与后端 DTO 一致时直接传对象，不重复重新赋值。
 - 只有字段名、格式或语义确实不同才创建 payload 转换。
-- 文件下载使用现有 request 的 `blob` / `arraybuffer` 能力，不单独新建 Axios 实例。
+
+## 文件上传
+
+`FormData`、Axios 上传配置和进度事件都属于 API 层。
+
+推荐：
+
+```ts
+export function uploadFile(file: File, onProgress?: (percent: number) => void) {
+  const data = new FormData()
+  data.append("file", file)
+
+  return request<UploadedFile>({
+    url: "/files",
+    method: "post",
+    data,
+    onUploadProgress(event) {
+      if (!event.total) return
+      onProgress?.(Math.round((event.loaded / event.total) * 100))
+    }
+  })
+}
+```
+
+规则：
+
+- 不在页面创建 `FormData` 后再拼 Axios 配置。
+- 不把 `AxiosProgressEvent` 暴露给页面，API 映射成简单百分比或业务需要的数据。
+- 不手动设置 `Content-Type: multipart/form-data`；让浏览器 / Axios 自动生成 boundary。
+- 上传 loading / progress 展示属于页面状态，不需要 Pinia。
+
+## 文件下载
+
+API 层负责声明 Blob 响应：
+
+```ts
+export function downloadFile(id: number) {
+  return request<Blob>({
+    url: `/files/${id}/download`,
+    method: "get",
+    responseType: "blob"
+  })
+}
+```
+
+浏览器保存文件属于 UI 边界：
+
+```ts
+const blob = await downloadFile(id)
+const url = URL.createObjectURL(blob)
+```
+
+- API 默认只返回 `Blob`，不要在 API 层操作 DOM、创建 `<a>` 或触发点击。
+- 保存文件逻辑只出现一次时可以留在页面局部函数。
+- 相同保存逻辑实际出现至少 3 次后，再考虑提取通用 util。
+- `blob` / `arraybuffer` 继续使用现有 `request<T>()`，不要新建 Axios 客户端。
 
 ## 错误处理
 
@@ -124,8 +181,11 @@ try {
 
 - 页面是否只依赖 API 函数，而不是 Axios？
 - API 是否没有反向依赖页面？
-- 是否复用了 `request<T>()` 的 data 解包？
-- 是否重复创建了 response wrapper？
+- 是否复用了 `request<T>()` 的 data 解包 / Blob 能力？
+- 上传是否没有手动设置 multipart boundary？
+- Axios 上传进度事件是否被转换成页面需要的简单数据？
+- 下载 API 是否只返回 Blob，不操作 DOM？
+- 是否重复创建了 response wrapper 或 Axios 实例？
 - Swagger 生成区是否避免手改？
 - 是否只修改了真正需要的接口层？
 - 是否通过 ESLint / TypeScript；生成器有改动时是否执行相关生成验证？
