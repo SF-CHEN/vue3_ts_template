@@ -8,6 +8,7 @@ const uploading = ref(false)
 const downloading = ref(false)
 
 function handleFileChange(uploadFile: UploadFile) {
+  // 只保留原始 File 给 API 层使用，Element Plus 的 UploadFile 类型不向下扩散。
   selectedFile.value = uploadFile.raw
   uploadProgress.value = 0
 }
@@ -26,6 +27,7 @@ async function handleUpload() {
   uploading.value = true
   uploadProgress.value = 0
   try {
+    // API 层把 Axios 进度事件转换成百分比，页面只维护展示状态。
     const result = await uploadDemoFile(selectedFile.value, (percent) => {
       uploadProgress.value = percent
     })
@@ -36,17 +38,21 @@ async function handleUpload() {
 }
 
 function saveBlob(blob: Blob, filename: string) {
+  // 浏览器保存动作属于 UI 边界，因此不放进通用 request 或 API 模块。
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.href = url
   link.download = filename
   link.click()
+
+  // 下载触发后及时释放临时 URL，避免长时间使用页面时累积浏览器资源。
   URL.revokeObjectURL(url)
 }
 
 async function handleDownload() {
   downloading.value = true
   try {
+    // API 只负责拿到 Blob，文件名和用户触发的保存行为由当前页面决定。
     const blob = await downloadDemoFile(1)
     saveBlob(blob, "file-transfer-demo.txt")
   } finally {
