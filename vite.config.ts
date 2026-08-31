@@ -10,10 +10,12 @@ import Components from "unplugin-vue-components/vite"
 import { defineConfig, loadEnv } from "vite"
 
 export default defineConfig(({ mode }) => {
-  const { VITE_PUBLIC_PATH = "/", VITE_PROXY_TARGET } = loadEnv(mode, process.cwd())
+  const env = loadEnv(mode, process.cwd(), "")
+  const publicPath = env.VITE_PUBLIC_PATH || "/"
+  const proxyTarget = env.DEV_PROXY_TARGET || "http://127.0.0.1:8080"
 
   return {
-    base: VITE_PUBLIC_PATH,
+    base: publicPath,
     resolve: {
       alias: {
         "@": resolve(__dirname, "src"),
@@ -26,7 +28,7 @@ export default defineConfig(({ mode }) => {
       open: true,
       proxy: {
         "/api": {
-          target: VITE_PROXY_TARGET || "http://127.0.0.1:8080",
+          target: proxyTarget,
           changeOrigin: true,
           rewrite: path => path.replace(/^\/api/, "")
         }
