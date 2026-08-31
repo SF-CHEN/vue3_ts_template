@@ -115,6 +115,8 @@ return request<User>({
 
 ## Swagger API 生成
 
+Swagger 脚本属于隔离的开发工具，不参与普通页面运行时链路。除非后端契约或生成规则明确需要变化，不需要为了业务页面修改生成器本身。
+
 1. 在 `.env` 配置 `SWAGGER_URL`（OpenAPI / Swagger JSON 地址）。
 2. 执行：
 
