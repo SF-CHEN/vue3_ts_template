@@ -1,40 +1,15 @@
-import { isArray } from "@@/utils/validate"
+import { isExternal } from "@@/utils/validate"
 import { describe, expect, it } from "vitest"
 
-describe("isArray", () => {
-  it("string", () => {
-    expect(isArray("")).toBe(false)
+describe("isExternal", () => {
+  it("识别外部链接", () => {
+    expect(isExternal("https://example.com")).toBe(true)
+    expect(isExternal("mailto:test@example.com")).toBe(true)
+    expect(isExternal("tel:10086")).toBe(true)
   })
 
-  it("number", () => {
-    expect(isArray(1)).toBe(false)
-  })
-
-  it("boolean", () => {
-    expect(isArray(true)).toBe(false)
-  })
-
-  it("null", () => {
-    expect(isArray(null)).toBe(false)
-  })
-
-  it("undefined", () => {
-    expect(isArray(undefined)).toBe(false)
-  })
-
-  it("symbol", () => {
-    expect(isArray(Symbol())).toBe(false)
-  })
-
-  it("bigInt", () => {
-    expect(isArray(BigInt(1))).toBe(false)
-  })
-
-  it("object", () => {
-    expect(isArray({})).toBe(false)
-  })
-
-  it("array object", () => {
-    expect(isArray([])).toBe(true)
+  it("识别站内路径", () => {
+    expect(isExternal("/dashboard")).toBe(false)
+    expect(isExternal("demo/article")).toBe(false)
   })
 })
