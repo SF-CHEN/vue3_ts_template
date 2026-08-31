@@ -11,6 +11,14 @@ import SelectField from "../fields/SelectField.vue"
 import SwitchField from "../fields/SwitchField.vue"
 import TextareaField from "../fields/TextareaField.vue"
 
+type BuiltInFieldValue
+  = | string
+    | number
+    | boolean
+    | Date
+    | (string | number | boolean | Date)[]
+    | undefined
+
 const props = withDefaults(defineProps<{
   item: FormSchemaItem
   form: Record<string, unknown>
@@ -36,7 +44,7 @@ const fieldComponents = {
   display: DisplayField
 } as const
 
-const fieldValue = computed(() => props.form[props.item.prop])
+const fieldValue = computed(() => props.form[props.item.prop] as BuiltInFieldValue)
 const fieldComponent = computed(() => {
   const type = props.item.type || "input"
   return type === "custom" ? undefined : fieldComponents[type]
