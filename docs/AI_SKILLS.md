@@ -72,6 +72,33 @@ src/common/apis/auth.ts
 - 实战发现父级菜单不能绑定某一个子模块的权限，否则会错误限制其他子模块；该规则已补入路由 Skill。
 - 实战确认图标 Skill 应要求“先检查 safelist，缺失才修改”，避免无意义配置变更。
 
+## 实战验收：文件上传与下载
+
+继续使用 `v3-connect-api` 实现 FormData 上传、上传进度、Blob 下载和页面 loading，用来检查特殊接口会不会诱导第二套 Axios 或 Service 层。
+
+实际实现保持为：
+
+```text
+src/pages/demo/file/index.vue
+src/common/apis/demo-file.ts
+src/common/apis/types/demo-file.ts
+src/router/index.ts
+src/common/apis/auth.ts
+```
+
+验收结果：
+
+- 没有新增 Axios 实例、Service、Repository 或上传管理器。
+- FormData 和 `onUploadProgress` 留在 API 层，页面只接收普通百分比。
+- 没有手动设置 `Content-Type: multipart/form-data`，避免破坏浏览器生成的 boundary。
+- Blob 下载继续复用现有 `request<Blob>()` 和 `responseType: "blob"`。
+- API 只返回 Blob，不操作 DOM；浏览器保存逻辑只出现一次，因此留在页面局部函数，没有提前抽 util。
+- 上传 loading / progress 都是页面局部状态，没有创建 Pinia Store。
+- 菜单复用已有 `fa-solid:file-alt` safelist，没有为了验收增加图标配置。
+- 现有单一 request 层已覆盖 JSON、FormData、上传进度、Blob 四类常见请求场景。
+
+这次实战后，`v3-connect-api` 增加了 FormData boundary、上传进度映射和 Blob/UI 边界规则。
+
 验收的目的不是要求所有业务都固定为 5 个文件，而是确保每个新增文件都有真实职责，且页面主体仍能沿着 `页面 → API / 必要时 Store → 通用组件` 的路径理解。
 
 Skill 负责“工作流”，`AGENTS.md` 负责“全局代码原则”，源码和 CI 负责“最终事实”。
