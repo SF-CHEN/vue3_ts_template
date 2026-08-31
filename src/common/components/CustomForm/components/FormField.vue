@@ -1,7 +1,15 @@
 <script lang="ts" setup>
 import type { FormOptionsMap, FormSchemaItem } from "../types"
-import { computed } from "vue"
-import { getFormType } from "../registry"
+import CascaderField from "../fields/CascaderField.vue"
+import CheckboxField from "../fields/CheckboxField.vue"
+import DateField from "../fields/DateField.vue"
+import DisplayField from "../fields/DisplayField.vue"
+import InputField from "../fields/InputField.vue"
+import NumberField from "../fields/NumberField.vue"
+import RadioField from "../fields/RadioField.vue"
+import SelectField from "../fields/SelectField.vue"
+import SwitchField from "../fields/SwitchField.vue"
+import TextareaField from "../fields/TextareaField.vue"
 
 const props = withDefaults(defineProps<{
   item: FormSchemaItem
@@ -15,17 +23,27 @@ const emit = defineEmits<{
   fieldChange: [prop: string, value: unknown]
 }>()
 
-const fieldValue = computed(() => props.form[props.item.prop])
+const fieldComponents = {
+  input: InputField,
+  textarea: TextareaField,
+  number: NumberField,
+  select: SelectField,
+  cascader: CascaderField,
+  date: DateField,
+  switch: SwitchField,
+  checkbox: CheckboxField,
+  radio: RadioField,
+  display: DisplayField
+} as const
 
+const fieldValue = computed(() => props.form[props.item.prop])
 const fieldComponent = computed(() => {
   const type = props.item.type || "input"
-  return getFormType(type)?.component
+  return type === "custom" ? undefined : fieldComponents[type]
 })
 
-const extraProps = computed(() => props.item.componentProps || {})
-
-function onFieldUpdate(val: unknown) {
-  emit("fieldChange", props.item.prop, val)
+function onFieldUpdate(value: unknown) {
+  emit("fieldChange", props.item.prop, value)
 }
 </script>
 
@@ -37,7 +55,6 @@ function onFieldUpdate(val: unknown) {
     :model-value="fieldValue"
     :form="form"
     :options="options"
-    v-bind="extraProps"
     @update:model-value="onFieldUpdate"
   />
 </template>
