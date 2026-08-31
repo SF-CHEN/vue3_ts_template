@@ -19,7 +19,8 @@ const MOCK_USERS: Record<string, CurrentUser> = {
       "demo:user:list",
       "demo:user:create",
       "demo:user:edit",
-      "demo:user:delete"
+      "demo:user:delete",
+      "demo:file:transfer"
     ]
   },
   user: {
