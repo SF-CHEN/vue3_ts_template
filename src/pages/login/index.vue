@@ -5,13 +5,9 @@ import { authApi } from "@@/apis/auth"
 import { useUserStore } from "@/pinia/stores/user"
 
 const route = useRoute()
-
 const router = useRouter()
-
 const userStore = useUserStore()
-
 const loginFormRef = useTemplateRef("loginFormRef")
-
 const loading = ref(false)
 
 const isMock = import.meta.env.VITE_USE_MOCK === "true"
@@ -36,11 +32,13 @@ function handleLogin() {
       ElMessage.error("表单校验不通过")
       return
     }
+
     loading.value = true
     authApi.login({
       username: loginFormData.username,
       password: loginFormData.password
     }).then((data) => {
+      // 登录接口同时返回用户资料，先写入 Store 可避免进入首页后再闪一次空用户状态。
       userStore.setToken(data.token)
       userStore.setProfile({
         id: data.user.id,
@@ -48,8 +46,11 @@ function handleLogin() {
         roles: data.user.roles,
         permissions: data.user.permissions
       })
+
+      // 未登录访问受限页面时，守卫会把原地址放进 redirect；登录后优先回到原页面。
       router.push(route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/")
     }).catch((error: Error) => {
+      // 登录失败清空密码，避免错误凭据继续留在输入框中被重复提交。
       loginFormData.password = ""
       ElMessage.error(error.message || "登录失败")
     }).finally(() => {
