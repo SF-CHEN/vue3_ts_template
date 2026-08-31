@@ -1,11 +1,8 @@
 <script lang="ts" setup>
-import type { FormItemRule, FormInstance } from "element-plus"
-
+import type { FormInstance, FormItemRule } from "element-plus"
 import type { FormLayout, FormOptionsMap, FormSchemaItem } from "./types"
-import { computed, useAttrs, useTemplateRef } from "vue"
 import FormItemWrapper from "./components/FormItemWrapper.vue"
 import { useFormRules, useVisibleSchema } from "./composables/useFormRules"
-import "./registry/builtInTypes"
 
 defineOptions({
   name: "CustomForm",
@@ -13,10 +10,8 @@ defineOptions({
 })
 
 const props = withDefaults(defineProps<{
-  /** 表单 schema */
   schema: FormSchemaItem[]
   options?: FormOptionsMap
-  /** 额外校验规则 */
   extraRules?: Record<string, FormItemRule | FormItemRule[]>
   layout?: FormLayout
   colSpan?: number
@@ -32,50 +27,37 @@ const emit = defineEmits<{
   change: [prop: string, value: unknown]
 }>()
 
-const internalModel = defineModel<Record<string, unknown>>({ default: () => ({}) })
-
-const formData = computed(() => internalModel.value)
-
-const schemaSource = computed(() => props.schema)
-const extraRulesSource = computed(() => props.extraRules ?? {})
-
-const { rules } = useFormRules(schemaSource, extraRulesSource, formData)
-const visibleSchema = useVisibleSchema(schemaSource, formData)
-
+const model = defineModel<Record<string, unknown>>({ default: () => ({}) })
 const formRef = useTemplateRef<FormInstance>("formRef")
 const attrs = useAttrs()
 
-const filterAttrs = computed(() =>
+const { rules } = useFormRules(
+  () => props.schema,
+  () => props.extraRules ?? {},
+  model
+)
+const visibleSchema = useVisibleSchema(() => props.schema, model)
+
+const formAttrs = computed(() =>
   Object.fromEntries(
     Object.entries(attrs).filter(([key]) => !["labelWidth", "label-width"].includes(key))
   )
 )
 
-const formLabelWidth = computed<string | number | undefined>(() => {
-  const labelWidth = attrs.labelWidth ?? attrs["label-width"]
-  return typeof labelWidth === "string" || typeof labelWidth === "number" ? labelWidth : undefined
+const labelWidth = computed<string | number | undefined>(() => {
+  const value = attrs.labelWidth ?? attrs["label-width"]
+  return typeof value === "string" || typeof value === "number" ? value : undefined
 })
 
-function onFieldChange(prop: string, val: unknown) {
-  const target = formData.value
-  if (target && typeof target === "object") {
-    target[prop] = val
-  }
-  internalModel.value = { ...internalModel.value, [prop]: val }
-  emit("change", prop, val)
+function onFieldChange(prop: string, value: unknown) {
+  model.value = { ...model.value, [prop]: value }
+  emit("change", prop, value)
 }
 
-function validate() {
-  return new Promise<boolean>((resolve, reject) => {
-    if (!formRef.value) {
-      reject(new Error("表单尚未挂载"))
-      return
-    }
-    formRef.value.validate((valid) => {
-      if (valid) resolve(true)
-      else reject(new Error("表单校验不通过"))
-    })
-  })
+async function validate() {
+  if (!formRef.value) throw new Error("表单尚未挂载")
+  await formRef.value.validate()
+  return true
 }
 
 function clearValidate(propsArg?: string | string[]) {
@@ -86,29 +68,24 @@ function resetFields() {
   formRef.value?.resetFields()
 }
 
-defineExpose({
-  validate,
-  clearValidate,
-  resetFields,
-  formRef
-})
+defineExpose({ validate, clearValidate, resetFields, formRef })
 </script>
 
 <template>
   <el-form
     ref="formRef"
     class="custom-form"
-    :model="formData"
+    :model="model"
     :rules="rules"
     :inline="layout === 'inline'"
-    v-bind="filterAttrs"
-    :label-width="formLabelWidth"
+    :label-width="labelWidth"
+    v-bind="formAttrs"
   >
     <el-row v-if="layout === 'grid'" :gutter="gutter">
       <el-col v-for="item in visibleSchema" :key="item.prop" :span="item.span || colSpan">
         <FormItemWrapper
           :item="item"
-          :form="formData"
+          :form="model"
           :options="options"
           @field-change="onFieldChange"
         >
@@ -124,7 +101,7 @@ defineExpose({
         v-for="item in visibleSchema"
         :key="item.prop"
         :item="item"
-        :form="formData"
+        :form="model"
         :options="options"
         @field-change="onFieldChange"
       >
