@@ -41,6 +41,8 @@ const mockAuthApi: AuthApi = {
     if (!profile || !input.password) {
       throw new Error("账号或密码错误（演示：admin / user，密码任意）")
     }
+
+    // Mock Token 只编码用户名，便于刷新页面后通过 Token 恢复同一套演示身份。
     return delay({
       token: `mock-token-${profile.username}`,
       user: profile
@@ -60,7 +62,10 @@ const mockAuthApi: AuthApi = {
   }
 }
 
-/** 真实后端适配示例：按项目协议改路径与字段映射即可。 */
+/**
+ * 真实后端适配层只负责路径和字段协议差异。
+ * 页面和 Store 始终依赖 AuthApi，切换 Mock / 真实接口时不需要改业务代码。
+ */
 const realAuthApi: AuthApi = {
   login(input) {
     return request<LoginResult>({ url: "/auth/login", method: "post", data: input })

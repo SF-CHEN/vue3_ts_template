@@ -17,6 +17,7 @@ export const useUserStore = defineStore("user", () => {
   const tagsViewStore = useTagsViewStore()
 
   const setToken = (value: string) => {
+    // Token 同时写入持久化存储和响应式状态，刷新后仍能恢复登录态。
     saveToken(value)
     token.value = value
   }
@@ -31,6 +32,7 @@ export const useUserStore = defineStore("user", () => {
   const getInfo = async () => {
     const currentUser = await authApi.getCurrentUser()
     setProfile(currentUser)
+    // 守卫用这个标记避免每次路由切换都重新请求当前用户。
     isGotUserInfo.value = true
   }
 
@@ -46,6 +48,7 @@ export const useUserStore = defineStore("user", () => {
 
   const clearSession = () => {
     resetToken()
+    // 切换账号前同步移除动态路由和页面缓存，防止上一个用户的权限状态残留。
     resetRouter()
     tagsViewStore.delAllVisitedViews()
     tagsViewStore.delAllCachedViews()
@@ -55,13 +58,14 @@ export const useUserStore = defineStore("user", () => {
     try {
       await authApi.logout()
     } catch {
-      // 登出接口失败也必须清理本地会话
+      // 登出接口失败也必须清理本地会话，避免用户被困在失效登录态中。
     }
     clearSession()
     await router.replace(LOGIN_PATH)
   }
 
   const expireSession = () => {
+    // 401 属于被动过期，不再调用后端 logout，只清理本地会话并返回登录页。
     clearSession()
     if (router.currentRoute.value.path !== LOGIN_PATH) {
       router.replace(LOGIN_PATH)

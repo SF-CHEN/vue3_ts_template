@@ -35,47 +35,46 @@ function handleClickOutside() {
 
 <style lang="scss" scoped>
 @import "@@/assets/styles/mixins.scss";
-$transition-time: 0.35s;
+$transition-time: 0.24s;
 
 .app-wrapper {
   @extend %clearfix;
   position: relative;
   width: 100%;
   height: 100%;
+  background: var(--app-page-bg);
 }
 
 .drawer-bg {
-  background-color: rgba(0, 0, 0, 0.3);
-  width: 100%;
-  top: 0;
-  height: 100%;
-  position: absolute;
+  position: fixed;
+  inset: 0;
   z-index: 2001;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(2px);
 }
 
 .sidebar-container {
-  background: linear-gradient(135deg, var(--app-dark), var(--app-secondary));
-  transition: width $transition-time;
-  width: var(--v3-sidebar-width);
-  height: 100%;
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
   z-index: 2002;
+  width: var(--v3-sidebar-width);
+  height: 100%;
   overflow: hidden;
   border-right: var(--v3-sidebar-border-right);
-  box-shadow: var(--app-shadow);
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.08);
+  transition: width $transition-time ease;
 }
 
 .main-container {
+  position: relative;
   height: 100%;
+  margin-left: var(--v3-sidebar-width);
   display: flex;
   flex-direction: column;
-  transition: margin-left $transition-time;
-  margin-left: var(--v3-sidebar-width);
-  position: relative;
-  background-color: var(--app-page-bg);
+  background: var(--app-page-bg);
+  transition: margin-left $transition-time ease;
 }
 
 .fixed-header {
@@ -84,35 +83,36 @@ $transition-time: 0.35s;
   right: 0;
   z-index: 9;
   width: calc(100% - var(--v3-sidebar-width));
-  transition: width $transition-time;
+  transition: width $transition-time ease;
 }
 
 .layout-header {
   position: relative;
   z-index: 9;
   flex-shrink: 0;
-  background-color: var(--v3-header-bg-color);
-  box-shadow: var(--v3-header-box-shadow);
+  overflow: hidden;
   border-bottom: var(--v3-header-border-bottom);
+  background: var(--v3-header-bg-color);
+  box-shadow: var(--v3-header-box-shadow);
 }
 
 .app-main {
-  flex: 1;
-  min-height: 0;
-  min-width: 0;
-  position: relative;
-  overflow: auto;
   @extend %scrollbar;
-  padding: 16px 30px 30px;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
 }
 
 .fixed-header + .app-main {
-  padding-top: calc(var(--v3-navigationbar-height) + 16px);
+  padding-top: calc(var(--v3-navigationbar-height) + 24px);
 }
 
 .has-tags-view {
   .fixed-header + .app-main {
-    padding-top: calc(var(--v3-header-height) + 16px);
+    padding-top: calc(var(--v3-header-height) + 24px);
   }
 }
 
@@ -120,9 +120,11 @@ $transition-time: 0.35s;
   .sidebar-container {
     width: var(--v3-sidebar-hide-width);
   }
+
   .main-container {
     margin-left: var(--v3-sidebar-hide-width);
   }
+
   .fixed-header {
     width: calc(100% - var(--v3-sidebar-hide-width));
   }
@@ -130,31 +132,46 @@ $transition-time: 0.35s;
 
 .mobile {
   .sidebar-container {
-    transition: transform $transition-time;
     width: var(--v3-sidebar-width);
+    transform: translateX(0);
+    transition: transform $transition-time ease;
   }
+
   .main-container {
-    margin-left: 0px;
+    margin-left: 0;
   }
+
   .fixed-header {
     width: 100%;
   }
+
   &.open-sidebar {
     position: fixed;
-    top: 0;
+    inset: 0;
   }
-  &.hide-sidebar {
-    .sidebar-container {
-      pointer-events: none;
-      transition-duration: 0.3s;
-      transform: translate3d(calc(0px - var(--v3-sidebar-width)), 0, 0);
-    }
+
+  &.hide-sidebar .sidebar-container {
+    pointer-events: none;
+    transform: translateX(calc(0px - var(--v3-sidebar-width)));
+  }
+
+  .app-main {
+    padding: 16px;
+  }
+
+  .fixed-header + .app-main {
+    padding-top: calc(var(--v3-navigationbar-height) + 16px);
+  }
+
+  .has-tags-view .fixed-header + .app-main {
+    padding-top: calc(var(--v3-header-height) + 16px);
   }
 }
 
 .without-animation {
   .sidebar-container,
-  .main-container {
+  .main-container,
+  .fixed-header {
     transition: none;
   }
 }

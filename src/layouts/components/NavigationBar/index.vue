@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import Screenfull from "@@/components/Screenfull/index.vue"
-import { useDevice } from "@@/composables/useDevice"
 import { ROLE_ADMIN } from "@@/constants/roles"
-import { useDark, useToggle } from "@vueuse/core"
 import { useAppStore } from "@/pinia/stores/app"
 import { useUserStore } from "@/pinia/stores/user"
 import { layoutsConfig } from "../../config"
@@ -10,12 +8,8 @@ import { Hamburger } from "../index"
 
 const route = useRoute()
 const router = useRouter()
-const { isMobile } = useDevice()
 const appStore = useAppStore()
 const userStore = useUserStore()
-
-const isDark = useDark()
-const toggleDark = useToggle(isDark)
 
 const pageTitle = computed(() => String(route.meta.showTitle || route.meta.title || "首页"))
 const isSubPage = computed(() => Boolean(route.meta.hidden))
@@ -36,253 +30,251 @@ function goBack() {
   router.push(typeof activeMenu === "string" && activeMenu ? activeMenu : "/")
 }
 
-function goHome() {
-  router.push("/dashboard")
-}
-
 function handleLogout() {
-  ElMessageBox.confirm("确定退出登录吗?", "警告", {
-    confirmButtonText: "确定",
+  ElMessageBox.confirm("确定退出登录吗?", "退出登录", {
+    confirmButtonText: "确定退出",
     cancelButtonText: "取消",
     type: "warning"
   }).then(async () => {
     await userStore.logout()
-    ElMessage.success("退出登录成功!")
+    ElMessage.success("已退出登录")
   }).catch(() => undefined)
 }
 </script>
 
 <template>
-  <div class="navigation-bar">
+  <header class="navigation-bar">
     <div class="header-left">
-      <Hamburger
-        v-if="isMobile"
-        :is-active="appStore.sidebar.opened"
-        class="hamburger"
-        @toggle-click="toggleSidebar"
-      />
+      <button type="button" class="header-action" title="展开或收起菜单" @click="toggleSidebar">
+        <Hamburger :is-active="appStore.sidebar.opened" />
+      </button>
+
       <button
         v-if="isSubPage"
         type="button"
-        class="nav-icon-btn back-btn"
+        class="back-action"
         title="返回上一页"
         @click="goBack"
       >
         <span class="i-ep-arrow-left" />
       </button>
-      <button
-        v-else
-        type="button"
-        class="nav-icon-btn home-btn"
-        title="返回首页"
-        @click="goHome"
-      >
-        <span class="i-ep-home-filled" />
-      </button>
+
       <h2 class="page-title">
         {{ pageTitle }}
       </h2>
     </div>
+
     <div class="right-menu">
-      <div class="action-items">
-        <el-tooltip effect="dark" :content="isDark ? '切换亮色主题' : '切换暗黑主题'" placement="bottom">
-          <button type="button" class="nav-icon-btn" @click="toggleDark()">
-            <span v-if="isDark" class="i-ep-sunny" />
-            <span v-else class="i-ep-moon" />
-          </button>
-        </el-tooltip>
-        <Screenfull v-if="layoutsConfig.showScreenfull" class="screenfull-btn" />
-      </div>
-      <el-dropdown>
-        <div class="user-info">
-          <div class="user-avatar">
-            {{ userInitials }}
-          </div>
-          <div class="user-meta">
-            <div class="user-name">
-              {{ userStore.username }}
-            </div>
-            <div class="user-role">
-              {{ isAdmin ? "管理员" : "普通用户" }}
-            </div>
-          </div>
-        </div>
+      <Screenfull v-if="layoutsConfig.showScreenfull" class="screenfull-btn" />
+
+      <el-dropdown trigger="click">
+        <button type="button" class="user-trigger">
+          <span class="user-avatar">{{ userInitials }}</span>
+          <span class="user-meta">
+            <strong class="user-name">{{ userStore.username }}</strong>
+            <span class="user-role">{{ isAdmin ? "管理员" : "普通用户" }}</span>
+          </span>
+          <span class="i-ep-arrow-down user-arrow" />
+        </button>
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="handleLogout">
+              <span class="i-ep-switch-button mr-2" />
               退出登录
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
     </div>
-  </div>
+  </header>
 </template>
 
 <style lang="scss" scoped>
 .navigation-bar {
-  min-height: var(--v3-navigationbar-height);
-  height: auto;
-  padding: 18px 30px 12px;
-  overflow: visible;
-  color: var(--v3-navigationbar-text-color);
+  height: var(--v3-navigationbar-height);
+  padding: 0 24px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background: var(--app-page-bg);
+  justify-content: space-between;
+  gap: 20px;
+  color: var(--v3-navigationbar-text-color);
+  background: var(--v3-header-bg-color);
+  backdrop-filter: blur(14px);
+}
+
+.header-left,
+.right-menu,
+.user-trigger {
+  display: flex;
+  align-items: center;
 }
 
 .header-left {
-  display: flex;
-  align-items: center;
-  gap: 15px;
   min-width: 0;
   flex: 1;
+  gap: 10px;
 }
 
-.hamburger {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-.nav-icon-btn {
+.header-action,
+.back-action {
+  appearance: none;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  color: var(--app-accent);
-  border: 1px solid transparent;
-  border-radius: 10px;
+  border: none;
+  outline: none;
+  color: var(--app-secondary);
   background: transparent;
   cursor: pointer;
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+  transition: var(--app-transition);
+}
+
+.header-action {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
 
   &:hover {
-    color: #409eff;
-    background-color: rgba(64, 158, 255, 0.1);
-    border-color: rgba(64, 158, 255, 0.3);
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0);
+    color: var(--app-primary);
+    background: var(--app-primary-light);
   }
 }
 
-.back-btn {
-  font-size: 20px;
-  color: var(--app-accent);
-  background: rgba(0, 0, 0, 0.04);
-  border-color: var(--app-border-light, rgba(0, 0, 0, 0.08));
+.back-action {
+  width: 30px;
+  height: 30px;
+  margin-left: 2px;
+  border-radius: 8px;
+  font-size: 17px;
 
   &:hover {
-    color: #409eff;
+    color: var(--app-primary);
+    background: var(--app-primary-light);
   }
-}
-
-.home-btn {
-  font-size: 26px;
 }
 
 .page-title {
-  margin: 0;
-  font-size: 1.8rem;
-  font-weight: bold;
-  line-height: 1.3;
-  color: var(--app-dark);
-  white-space: nowrap;
+  max-width: 52vw;
+  margin: 0 0 0 4px;
   overflow: hidden;
+  color: var(--app-dark);
+  font-size: 20px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .right-menu {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-left: 16px;
-}
-
-.action-items {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-shrink: 0;
+  gap: 10px;
 }
 
 .screenfull-btn {
+  width: 34px;
+  height: 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.user-trigger {
+  appearance: none;
+  gap: 9px;
+  padding: 4px 6px;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  border-radius: 9px;
+  color: inherit;
+  font: inherit;
+  background: transparent;
   cursor: pointer;
-  border-radius: 10px;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+  transition: var(--app-transition);
 
   &:hover {
-    color: #409eff;
-    background-color: rgba(64, 158, 255, 0.1);
+    background: var(--app-bg-section);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    box-shadow: none;
   }
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  cursor: pointer;
+:deep(.el-tooltip__trigger:focus-visible) {
   outline: none;
-  font-size: 16px;
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: var(--app-accent);
-  display: flex;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 14px;
   flex-shrink: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: var(--app-primary);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .user-meta {
-  line-height: 1.35;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  line-height: 1.2;
 }
 
 .user-name {
-  font-weight: bold;
-  font-size: 16px;
+  max-width: 120px;
+  overflow: hidden;
   color: var(--app-dark);
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-role {
-  font-size: 0.85rem;
-  color: #777;
+  margin-top: 3px;
+  color: var(--app-text-secondary);
+  font-size: 11px;
+  font-weight: 400;
 }
 
-@media screen and (max-width: 576px) {
+.user-arrow {
+  margin-left: 1px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+@media screen and (max-width: 768px) {
   .navigation-bar {
-    padding: 12px;
+    padding: 0 14px;
+  }
+
+  .user-meta,
+  .user-arrow {
+    display: none;
   }
 
   .page-title {
-    font-size: 1.25rem;
+    max-width: 48vw;
+    font-size: 17px;
   }
 
-  .user-meta {
-    display: none;
+  .user-trigger {
+    padding: 3px;
   }
 }
 </style>
