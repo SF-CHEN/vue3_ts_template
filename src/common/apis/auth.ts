@@ -11,7 +11,16 @@ const MOCK_USERS: Record<string, CurrentUser> = {
     id: 1,
     username: "admin",
     roles: [ROLE_ADMIN],
-    permissions: ["demo:article:list", "demo:article:create", "demo:article:edit", "demo:article:delete"]
+    permissions: [
+      "demo:article:list",
+      "demo:article:create",
+      "demo:article:edit",
+      "demo:article:delete",
+      "demo:user:list",
+      "demo:user:create",
+      "demo:user:edit",
+      "demo:user:delete"
+    ]
   },
   user: {
     id: 2,
