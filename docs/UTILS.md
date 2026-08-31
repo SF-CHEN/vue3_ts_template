@@ -32,14 +32,12 @@ if (checkRole(["admin", "manager"])) {
 
 ## 本地存储 `@@/utils/local-storage`
 
-只封装模板当前确实需要持久化的状态，所有 key 由 `@@/constants/cache-key` 中的 `CacheKey` 管理。
+只封装模板当前确实需要持久化的状态，所有 key 由 `@@/constants/cache-key` 中的 `CacheKey` 管理：
 
-| 分组 | 函数 | 说明 |
-| --- | --- | --- |
-| Token | `getToken` / `setToken` / `removeToken` | 用户认证令牌 |
-| 侧边栏 | `getSidebarStatus` / `setSidebarStatus` | 侧边栏展开/收起状态 |
-| 标签栏 | `getVisitedViews` / `setVisitedViews` / `removeVisitedViews` | 访问标签缓存 |
-| KeepAlive | `getCachedViews` / `setCachedViews` / `removeCachedViews` | 缓存页面名称 |
+- Token：`getToken` / `setToken` / `removeToken`
+- 侧边栏：`getSidebarStatus` / `setSidebarStatus`
+- 标签栏：`getVisitedViews` / `setVisitedViews` / `removeVisitedViews`
+- KeepAlive：`getCachedViews` / `setCachedViews` / `removeCachedViews`
 
 布局开关属于项目静态配置，直接修改 `src/layouts/config.ts`，不写入 localStorage。
 
