@@ -40,6 +40,8 @@
 
 这些规则多数属于全局编码约定，不需要独立工作流。Skill 过多会增加 AI 选择成本、重复规则和上下文 Token。
 
+上传、下载、Blob、FormData 等属于接口工作流，继续由 `v3-connect-api` 覆盖，不新增独立上传/下载 Skill。
+
 ## 使用原则
 
 1. 普通页面任务先使用 `v3-generate-page`。
@@ -98,6 +100,12 @@ src/common/apis/auth.ts
 - 现有单一 request 层已覆盖 JSON、FormData、上传进度、Blob 四类常见请求场景。
 
 这次实战后，`v3-connect-api` 增加了 FormData boundary、上传进度映射和 Blob/UI 边界规则。
+
+## 稳定状态
+
+经过 CRUD、权限路由、图标、Store 判断和特殊接口两轮实战，当前 5 个 Skill 已覆盖模板的主要高频工作流。
+
+后续默认不继续增加 Skill。只有某类新工作已经重复出现、跨多个文件、且现有 Skill 无法清晰覆盖时，才重新评估。
 
 验收的目的不是要求所有业务都固定为 5 个文件，而是确保每个新增文件都有真实职责，且页面主体仍能沿着 `页面 → API / 必要时 Store → 通用组件` 的路径理解。
 
