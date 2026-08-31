@@ -4,7 +4,6 @@ import { getToken } from "@@/utils/local-storage"
 import NProgress from "nprogress"
 import { usePermissionStore } from "@/pinia/stores/permission"
 import { useUserStore } from "@/pinia/stores/user"
-import { routerConfig } from "@/router/config"
 
 NProgress.configure({ showSpinner: false })
 
@@ -30,12 +29,10 @@ export function registerNavigationGuard(router: Router) {
       await userStore.getInfo()
 
       const permissionStore = usePermissionStore()
-      const { roles, permissions } = userStore
-      if (routerConfig.dynamic) {
-        permissionStore.setRoutes({ roles, permissions })
-      } else {
-        permissionStore.setAllRoutes()
-      }
+      permissionStore.setRoutes({
+        roles: userStore.roles,
+        permissions: userStore.permissions
+      })
       permissionStore.addRoutes.forEach(route => router.addRoute(route))
 
       return { ...to, replace: true }
