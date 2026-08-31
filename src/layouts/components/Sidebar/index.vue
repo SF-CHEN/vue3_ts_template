@@ -16,13 +16,10 @@ const isCollapse = computed(() => !appStore.sidebar.opened)
 const sidebarMenuBgColor = "var(--v3-sidebar-menu-bg-color)"
 const sidebarMenuTextColor = "var(--v3-sidebar-menu-text-color)"
 const sidebarMenuActiveTextColor = "var(--v3-sidebar-menu-active-text-color)"
-const sidebarMenuItemHeight = "var(--v3-sidebar-menu-item-height)"
-const sidebarMenuHoverBgColor = "var(--v3-sidebar-menu-hover-bg-color)"
-const tipLineWidth = "4px"
 </script>
 
 <template>
-  <div :class="{ 'has-logo': layoutsConfig.showLogo }" class="is-left-mode">
+  <aside :class="{ 'has-logo': layoutsConfig.showLogo }" class="sidebar-shell">
     <Logo v-if="layoutsConfig.showLogo" :collapse="isCollapse" />
     <el-scrollbar wrap-class="scrollbar-wrapper">
       <el-menu
@@ -43,33 +40,18 @@ const tipLineWidth = "4px"
         />
       </el-menu>
     </el-scrollbar>
-  </div>
+  </aside>
 </template>
 
 <style lang="scss" scoped>
-%tip-line {
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: v-bind(tipLineWidth);
-    height: 100%;
-    background-color: var(--app-accent);
-  }
+.has-logo .el-scrollbar {
+  height: calc(100% - 72px);
 }
 
-.has-logo {
-  .el-scrollbar {
-    height: calc(100% - 80px);
-  }
-}
-
-.is-left-mode {
+.sidebar-shell {
   height: 100%;
-  background: linear-gradient(135deg, var(--app-dark), var(--app-secondary));
-  box-shadow: var(--app-shadow);
-  color: white;
+  color: #cbd5e1;
+  background: #0f172a;
 }
 
 .el-scrollbar {
@@ -77,6 +59,7 @@ const tipLineWidth = "4px"
 
   :deep(.scrollbar-wrapper) {
     overflow-x: hidden;
+    padding: 10px 8px 18px;
   }
 
   :deep(.el-scrollbar__bar.is-horizontal) {
@@ -85,90 +68,110 @@ const tipLineWidth = "4px"
 }
 
 .el-menu {
-  user-select: none;
-  border: none;
   width: 100%;
+  border: none;
   background: transparent !important;
+  user-select: none;
 }
 
-.el-menu--horizontal {
-  height: v-bind(sidebarMenuItemHeight);
-}
-
-:deep(.el-menu-item),
-:deep(.el-sub-menu__title),
-:deep(.el-sub-menu .el-menu-item),
-:deep(.el-menu--horizontal .el-menu-item) {
-  height: v-bind(sidebarMenuItemHeight);
-  line-height: v-bind(sidebarMenuItemHeight);
-  font-size: 14px;
-
-  &.is-active,
-  &:hover {
-    background-color: v-bind(sidebarMenuHoverBgColor);
-  }
-}
-
-.is-left-mode :deep(.el-menu-item-group) {
-  margin: 20px 0;
-
-  .el-menu-item-group__title {
-    padding: 10px 20px !important;
-    font-size: 0.9rem !important;
-    font-weight: 500;
-    line-height: 1.6 !important;
-    color: rgb(255 255 255 / 70%) !important;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: default;
-    background: transparent !important;
-  }
-}
-
-.is-left-mode :deep(.el-menu-item) {
-  padding: 12px 20px !important;
-  height: auto !important;
-  min-height: 0 !important;
-  line-height: 1.6 !important;
-  margin: 0 !important;
-  border-left: 4px solid transparent;
-  transition: var(--app-transition);
+.sidebar-shell :deep(.el-menu-item),
+.sidebar-shell :deep(.el-sub-menu__title),
+.sidebar-shell :deep(.el-sub-menu .el-menu-item) {
+  position: relative;
+  height: var(--v3-sidebar-menu-item-height);
+  min-width: 0;
+  margin: 4px 4px;
+  padding: 0 14px !important;
   display: flex;
   align-items: center;
+  border-radius: 9px;
+  color: #94a3b8 !important;
+  font-size: 13px;
+  line-height: var(--v3-sidebar-menu-item-height);
+  transition: background-color 0.18s ease, color 0.18s ease;
 
   .el-icon,
   .svg-icon {
-    margin-right: 10px !important;
-    width: 12px;
-    height: 12px;
-    font-size: 12px;
-    text-align: center;
+    width: 18px;
+    height: 18px;
+    margin-right: 11px !important;
     flex-shrink: 0;
+    color: #64748b;
+    font-size: 18px;
+    transition: color 0.18s ease;
   }
 
   .title {
-    font-size: 14px;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &:hover {
-    background-color: rgb(255 255 255 / 10%) !important;
-  }
+    color: #f8fafc !important;
+    background: rgba(255, 255, 255, 0.065) !important;
 
-  &.is-active {
-    background-color: rgb(52 152 219 / 20%) !important;
-    border-left-color: var(--app-accent);
-    color: #ffffff !important;
-
-    &::before {
-      display: none;
+    .el-icon,
+    .svg-icon {
+      color: #cbd5e1;
     }
   }
 }
 
+.sidebar-shell :deep(.el-menu-item.is-active) {
+  color: #ffffff !important;
+  background: #2563eb !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+
+  .el-icon,
+  .svg-icon {
+    color: #ffffff;
+  }
+}
+
+.sidebar-shell :deep(.el-sub-menu.is-active > .el-sub-menu__title) {
+  color: #f8fafc !important;
+
+  .el-icon,
+  .svg-icon {
+    color: #94a3b8;
+  }
+}
+
+.sidebar-shell :deep(.el-menu-item-group) {
+  margin: 12px 0;
+
+  .el-menu-item-group__title {
+    padding: 10px 18px 6px !important;
+    color: #64748b !important;
+    background: transparent !important;
+    font-size: 10px !important;
+    font-weight: 700;
+    line-height: 1.4 !important;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+}
+
 .el-menu--collapse {
-  :deep(.el-sub-menu.is-active .el-sub-menu__title) {
-    @extend %tip-line;
-    background-color: v-bind(sidebarMenuHoverBgColor);
+  :deep(.el-menu-item),
+  :deep(.el-sub-menu__title) {
+    width: 48px;
+    margin: 4px auto;
+    padding: 0 !important;
+    justify-content: center;
+
+    .el-icon,
+    .svg-icon {
+      margin-right: 0 !important;
+    }
+  }
+
+  :deep(.el-sub-menu.is-active > .el-sub-menu__title) {
+    color: #ffffff !important;
+    background: rgba(37, 99, 235, 0.22) !important;
   }
 }
 </style>
