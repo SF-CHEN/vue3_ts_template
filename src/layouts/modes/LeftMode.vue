@@ -1,28 +1,19 @@
 <script lang="ts" setup>
 import { useDevice } from "@@/composables/useDevice"
 import { useAppStore } from "@/pinia/stores/app"
-import { useSettingsStore } from "@/pinia/stores/settings"
+import { layoutsConfig } from "../config"
 import { AppMain, NavigationBar, Sidebar, TagsView } from "../components"
 
 const { isMobile } = useDevice()
-
 const appStore = useAppStore()
 
-const settingsStore = useSettingsStore()
+const layoutClasses = computed(() => ({
+  "hide-sidebar": !appStore.sidebar.opened,
+  "open-sidebar": appStore.sidebar.opened,
+  "without-animation": appStore.sidebar.withoutAnimation,
+  "mobile": isMobile.value
+}))
 
-const { showTagsView, fixedHeader } = storeToRefs(settingsStore)
-
-/** 定义计算属性 layoutClasses，用于控制布局的类名 */
-const layoutClasses = computed(() => {
-  return {
-    "hide-sidebar": !appStore.sidebar.opened,
-    "open-sidebar": appStore.sidebar.opened,
-    "without-animation": appStore.sidebar.withoutAnimation,
-    "mobile": isMobile.value
-  }
-})
-
-/** 用于处理点击 mobile 端侧边栏遮罩层的事件 */
 function handleClickOutside() {
   appStore.closeSidebar(false)
 }
@@ -30,18 +21,13 @@ function handleClickOutside() {
 
 <template>
   <div :class="layoutClasses" class="app-wrapper">
-    <!-- mobile 端侧边栏遮罩层 -->
     <div v-if="layoutClasses.mobile && layoutClasses['open-sidebar']" class="drawer-bg" @click="handleClickOutside" />
-    <!-- 左侧边栏 -->
     <Sidebar class="sidebar-container" />
-    <!-- 主容器 -->
-    <div :class="{ 'has-tags-view': showTagsView }" class="main-container">
-      <!-- 头部导航栏和标签栏 -->
-      <div :class="{ 'fixed-header': fixedHeader }" class="layout-header">
+    <div :class="{ 'has-tags-view': layoutsConfig.showTagsView }" class="main-container">
+      <div :class="{ 'fixed-header': layoutsConfig.fixedHeader }" class="layout-header">
         <NavigationBar />
-        <TagsView v-show="showTagsView" />
+        <TagsView v-if="layoutsConfig.showTagsView" />
       </div>
-      <!-- 页面主体内容 -->
       <AppMain class="app-main" />
     </div>
   </div>
@@ -110,21 +96,17 @@ $transition-time: 0.35s;
   border-bottom: var(--v3-header-border-bottom);
 }
 
-/* 唯一主滚动容器：滚动条在内容区外层右缘 */
 .app-main {
   flex: 1;
   min-height: 0;
-  /* 与列方向 flex 交叉轴配合，防止宽表把整页撑出横向滚动 */
   min-width: 0;
   position: relative;
   overflow: auto;
   @extend %scrollbar;
-  /* 左右底留白；顶部额外间距让 page-card 上圆角露出来 */
   padding: 16px 30px 30px;
 }
 
 .fixed-header + .app-main {
-  /* 避开固定顶栏 + 与顶栏之间的间距 */
   padding-top: calc(var(--v3-navigationbar-height) + 16px);
 }
 
@@ -146,7 +128,6 @@ $transition-time: 0.35s;
   }
 }
 
-// 适配 mobile 端
 .mobile {
   .sidebar-container {
     transition: transform $transition-time;
