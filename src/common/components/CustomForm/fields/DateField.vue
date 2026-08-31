@@ -30,7 +30,7 @@ function onChange(val: unknown) {
 
 <template>
   <el-date-picker
-    :model-value="modelValue as any"
+    :model-value="modelValue"
     class="date-field"
     :placeholder="placeholder"
     v-bind="item.typeProps"
