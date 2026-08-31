@@ -1,8 +1,6 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "jsx": "preserve",
-    "jsxImportSource": "vue",
     "lib": ["esnext", "dom"],
     "useDefineForClassFields": true,
     "module": "esnext",
@@ -13,11 +11,8 @@
     },
     "resolveJsonModule": true,
     "types": ["vite/client", "element-plus/global"],
-    "allowImportingTsExtensions": true,
     "strict": true,
     "noEmit": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
     "isolatedModules": true,
     "skipLibCheck": true
   },
