@@ -16,7 +16,7 @@
     "check:fix": "pnpm lint:fix && pnpm typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "init": "powershell -NoProfile -ExecutionPolicy Bypass -File ./script/init-project.ps1",
+    "init": "node script/init-project.mjs",
     "api:generate": "node script/generate-api.cjs",
     "api:doc": "node script/doc.cjs"
   },
