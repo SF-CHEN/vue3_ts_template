@@ -24,7 +24,7 @@
 
 ## 为什么图标也单独做 Skill
 
-图标规则本身很短，但有一个容易遗漏的构建问题：路由 `meta.icon` 是运行时字符串，新增动态菜单图标时需要同步 `uno.config.ts` safelist。
+图标规则本身很短，但有一个容易遗漏的构建问题：路由 `meta.icon` 是运行时字符串，新增动态菜单图标时需要检查 `uno.config.ts` safelist。
 
 因此图标使用单独做轻量 Skill，页面和路由 Skill 只引用它，不重复维护图标规则。
 
@@ -47,5 +47,31 @@
 3. 单独接口联调直接使用 `v3-connect-api`，不需要先加载页面 Skill。
 4. 不因为一个特殊需求创建新的永久 Skill；先看是否能写进现有 Skill。
 5. 只有某类工作反复出现、跨多个文件且容易犯错时，才考虑新增 Skill。
+
+## 实战验收：用户管理模块
+
+使用当前 Skill 实现一个包含查询、新增、编辑、删除、权限、路由菜单和 API 的用户管理模块，结果用于检查 Skill 是否会诱导过度设计。
+
+实际实现保持为：
+
+```text
+src/pages/demo/user/index.vue
+src/common/apis/demo-user.ts
+src/common/apis/types/demo-user.ts
+src/router/index.ts
+src/common/apis/auth.ts
+```
+
+验收结果：
+
+- 页面局部查询、表格、弹窗和表单状态没有创建 Pinia Store。
+- 没有新增 Service、Repository、Composable、Manager 或 Registry。
+- 页面只调用 API 函数，没有直接使用 Axios。
+- API 使用 `request<T>()`，没有重复 response wrapper。
+- 路由复用现有 `ep:user` 图标；该图标已经存在于 safelist，因此没有重复修改 `uno.config.ts`。
+- 实战发现父级菜单不能绑定某一个子模块的权限，否则会错误限制其他子模块；该规则已补入路由 Skill。
+- 实战确认图标 Skill 应要求“先检查 safelist，缺失才修改”，避免无意义配置变更。
+
+验收的目的不是要求所有业务都固定为 5 个文件，而是确保每个新增文件都有真实职责，且页面主体仍能沿着 `页面 → API / 必要时 Store → 通用组件` 的路径理解。
 
 Skill 负责“工作流”，`AGENTS.md` 负责“全局代码原则”，源码和 CI 负责“最终事实”。
