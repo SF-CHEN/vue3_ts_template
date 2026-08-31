@@ -91,7 +91,9 @@ meta: {
 
 模板中静态出现的 `i-ep-*` / `i-fa-solid-*` class 通常可以自动扫描。
 
-路由 `meta.icon` 是运行时字符串，构建器无法从 class 中直接扫描，因此**新增路由菜单图标时必须同步 `uno.config.ts` safelist**。
+路由 `meta.icon` 是运行时字符串，构建器无法从 class 中直接扫描，因此新增路由菜单图标时必须检查 `uno.config.ts` safelist。
+
+先检查目标图标是否已经存在；**已经存在就不要重复修改配置**。
 
 例如新增：
 
@@ -99,7 +101,7 @@ meta: {
 icon: "ep:setting"
 ```
 
-同时在 `EP_SAFELIST` 增加：
+如果 `EP_SAFELIST` 还没有 `setting`，再增加：
 
 ```ts
 "setting"
@@ -111,7 +113,7 @@ icon: "ep:setting"
 icon: "fa-solid:users"
 ```
 
-同时在 `FA_SOLID_SAFELIST` 增加：
+如果 `FA_SOLID_SAFELIST` 还没有 `users`，再增加：
 
 ```ts
 "users"
@@ -127,11 +129,12 @@ icon: "fa-solid:users"
 - 不创建 Icon Manager / Registry。
 - 不复制 SVG path 到 Vue 模板，优先放入现有 SVG 目录。
 - 不为未来可能使用的图标提前扩充 safelist。
+- 不重复添加已经存在的 safelist 项。
 
 ## 完成检查
 
 - 普通图标是否优先使用 `ep` / `fa-solid`？
 - 路由图标是否使用 `meta.icon` 的 `prefix:name` 格式？
-- 动态路由图标是否同步 safelist？
+- 动态路由图标是否检查 safelist，并只在缺失时补充？
 - 自定义 SVG 是否确实属于业务专用图形？
 - 是否避免新增无必要图标依赖？
