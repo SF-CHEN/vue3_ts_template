@@ -8,7 +8,10 @@ const tagsViewStore = useTagsViewStore()
 
 watch(
   () => route.fullPath,
-  () => tagsViewStore.addCachedView(route),
+  () => {
+    // 缓存注册放在 AppMain，而不是 TagsView UI 中，这样关闭标签栏时 meta.keepAlive 仍然有效。
+    tagsViewStore.addCachedView(route)
+  },
   { immediate: true }
 )
 </script>
@@ -16,10 +19,11 @@ watch(
 <template>
   <section class="app-main">
     <div class="app-scrollbar">
-      <router-view v-slot="{ Component, route }">
+      <router-view v-slot="{ Component, route: matchedRoute }">
         <transition name="fade-transform" mode="out-in">
+          <!-- include 只缓存声明了 keepAlive 的组件名；关闭标签时 Store 会同步移除对应缓存。 -->
           <keep-alive :include="tagsViewStore.cachedViews">
-            <component :is="Component" :key="route.path" class="app-container-grow" />
+            <component :is="Component" :key="matchedRoute.path" class="app-container-grow" />
           </keep-alive>
         </transition>
       </router-view>
