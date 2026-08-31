@@ -3,7 +3,14 @@ import { useTagsViewStore } from "@/pinia/stores/tags-view"
 import { layoutsConfig } from "../../config"
 import { Footer } from "../index"
 
+const route = useRoute()
 const tagsViewStore = useTagsViewStore()
+
+watch(
+  () => route.fullPath,
+  () => tagsViewStore.addCachedView(route),
+  { immediate: true }
+)
 </script>
 
 <template>
