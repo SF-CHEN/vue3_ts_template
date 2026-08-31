@@ -1,50 +1,36 @@
 <script lang="ts" setup>
-import { getCssVar } from "@@/utils/css"
 import { useAppStore } from "@/pinia/stores/app"
 import { usePermissionStore } from "@/pinia/stores/permission"
-import { useSettingsStore } from "@/pinia/stores/settings"
+import { layoutsConfig } from "../../config"
 import { Logo } from "../index"
 import Item from "./Item.vue"
 
-const v3SidebarMenuBgColor = getCssVar("--v3-sidebar-menu-bg-color")
-
-const v3SidebarMenuTextColor = getCssVar("--v3-sidebar-menu-text-color")
-
-const v3SidebarMenuActiveTextColor = getCssVar("--v3-sidebar-menu-active-text-color")
-
 const route = useRoute()
-
 const appStore = useAppStore()
-
 const permissionStore = usePermissionStore()
 
-const settingsStore = useSettingsStore()
-
 const activeMenu = computed(() => route.meta.activeMenu || route.path)
-
 const noHiddenRoutes = computed(() => permissionStore.routes.filter(item => !item.meta?.hidden))
-
 const isCollapse = computed(() => !appStore.sidebar.opened)
 
-const isLogo = computed(() => settingsStore.showLogo)
-
+const sidebarMenuBgColor = "var(--v3-sidebar-menu-bg-color)"
+const sidebarMenuTextColor = "var(--v3-sidebar-menu-text-color)"
+const sidebarMenuActiveTextColor = "var(--v3-sidebar-menu-active-text-color)"
 const sidebarMenuItemHeight = "var(--v3-sidebar-menu-item-height)"
-
 const sidebarMenuHoverBgColor = "var(--v3-sidebar-menu-hover-bg-color)"
-
 const tipLineWidth = "4px"
 </script>
 
 <template>
-  <div :class="{ 'has-logo': isLogo }" class="is-left-mode">
-    <Logo v-if="isLogo" :collapse="isCollapse" />
+  <div :class="{ 'has-logo': layoutsConfig.showLogo }" class="is-left-mode">
+    <Logo v-if="layoutsConfig.showLogo" :collapse="isCollapse" />
     <el-scrollbar wrap-class="scrollbar-wrapper">
       <el-menu
         :default-active="activeMenu"
         :collapse="isCollapse"
-        :background-color="v3SidebarMenuBgColor"
-        :text-color="v3SidebarMenuTextColor"
-        :active-text-color="v3SidebarMenuActiveTextColor"
+        :background-color="sidebarMenuBgColor"
+        :text-color="sidebarMenuTextColor"
+        :active-text-color="sidebarMenuActiveTextColor"
         :collapse-transition="false"
         :unique-opened="false"
         mode="vertical"
@@ -75,14 +61,12 @@ const tipLineWidth = "4px"
 
 .has-logo {
   .el-scrollbar {
-    /* Logo 为 padding 撑开，预留约 72px+ */
     height: calc(100% - 80px);
   }
 }
 
 .is-left-mode {
   height: 100%;
-  /* 与旧 sidebar.vue 一致：dark → secondary */
   background: linear-gradient(135deg, var(--app-dark), var(--app-secondary));
   box-shadow: var(--app-shadow);
   color: white;
@@ -125,12 +109,6 @@ const tipLineWidth = "4px"
   }
 }
 
-/**
- * 以下数值直接来自旧项目 layouts/components/sidebar.vue
- * .nav-section { margin: 20px 0 }
- * .nav-section h3 { padding: 10px 20px; font-size: 0.9rem; ... }
- * .nav-links li { padding: 12px 20px; }
- */
 .is-left-mode :deep(.el-menu-item-group) {
   margin: 20px 0;
 
