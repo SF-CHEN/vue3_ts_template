@@ -4,13 +4,11 @@
 
 ## 当前 Skill
 
-| Skill | 负责 | 不负责 |
-| --- | --- | --- |
-| `v3-generate-page` | 页面、CRUD、列表、详情、编辑页的整体实现流程 | 重复维护 API / 路由 / Store / 图标细则 |
-| `v3-connect-api` | Swagger、手写 API、真实后端联调、Axios 协议边界 | 页面 UI |
-| `v3-upsert-route` | Vue Router、菜单、权限、keepAlive | 页面业务实现 |
-| `v3-upsert-store` | 真正跨页面共享的 Pinia 状态 | 页面局部状态 |
-| `v3-use-icons` | UnoCSS Iconify、本地 SVG、路由菜单图标 safelist | 页面布局设计 |
+- `v3-generate-page`：页面、CRUD、列表、详情、编辑页的整体实现流程；不重复维护 API、路由、Store、图标细则。
+- `v3-connect-api`：Swagger、手写 API、真实后端联调、Axios 协议边界；不负责页面 UI。
+- `v3-upsert-route`：Vue Router、菜单、权限、keepAlive；不负责页面业务实现。
+- `v3-upsert-store`：真正跨页面共享的 Pinia 状态；不负责页面局部状态。
+- `v3-use-icons`：UnoCSS Iconify、本地 SVG、路由菜单图标 safelist；不负责页面布局设计。
 
 ## 为什么接口单独做 Skill
 
