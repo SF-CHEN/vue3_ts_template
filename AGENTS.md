@@ -94,6 +94,7 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 
 - 普通查询、编辑、CRUD 表单优先直接使用 Element Plus。
 - `CustomForm` 只用于明确需要 schema 驱动、动态字段或多处复用同一表单配置的场景。
+- `CustomForm` 使用固定内置字段；额外字段通过 slot 实现，不新增运行时字段 registry。
 - 不为了减少几行模板代码把普通表单改成 schema 配置。
 - 表单字段与后端 payload 一致时直接提交表单对象。
 - 只有需要字段转换时才额外创建 submit payload。
@@ -109,6 +110,7 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 ## API
 
 - 页面只能依赖 API，API 禁止反向依赖页面。
+- `request<T>()` 直接返回业务 `data`，页面和 API 不重复 `.then(res => res.data)`。
 - request 层负责 Token、响应解包和通用错误处理。
 - 通用错误已由 request 层提示时，页面默认不重复 catch + message。
 - 页面只处理当前业务真正需要的成功提示、确认交互和特殊错误分支。
@@ -120,6 +122,12 @@ Vue 3 + Vite + TypeScript + Element Plus + Pinia + Vue Router + UnoCSS。
 - 使用 Setup Store。
 - 只有确实需要 setup 外访问（如路由守卫、拦截器）时才创建 `useXxxStoreOutside()`。
 - 持久化只有当前需求明确需要时才添加。
+
+## 环境变量
+
+- `VITE_*` 只放浏览器端可以公开读取的配置。
+- 开发代理使用 `DEV_PROXY_TARGET`，Swagger 脚本使用 `SWAGGER_URL`，不要为了方便改成 `VITE_*`。
+- 密钥、内网凭证等敏感信息禁止放入 `VITE_*`。
 
 ## 样式
 
