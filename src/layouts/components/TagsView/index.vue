@@ -77,7 +77,6 @@ function initTags() {
 function addTags(targetRoute: RouteLocationNormalizedGeneric) {
   if (targetRoute.name) {
     tagsViewStore.addVisitedView(targetRoute)
-    tagsViewStore.addCachedView(targetRoute)
   }
 }
 
