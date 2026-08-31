@@ -36,7 +36,7 @@ pnpm api:doc            # 生成接口文档摘要
 
 ## AI 开发约定
 
-项目根目录的 [AGENTS.md](./AGENTS.md) 是 AI 开发的主要规则入口。
+项目根目录的 [AGENTS.md](./AGENTS.md) 是 AI 开发的主要规则入口。模板当前用法以 `AGENTS.md`、本 README、源码和 CI 为准，不保留优化前的历史审查文档，避免 AI 读到已经删除的旧架构。
 
 核心原则：
 
