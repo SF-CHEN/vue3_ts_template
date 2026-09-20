@@ -10,7 +10,7 @@
     ".env": ".env.*, .envrc, env.d.ts",
     ".gitignore": ".gitattributes, .gitmodules, .gitmessage",
     "AGENTS.md": "CLAUDE.md, CLAUDE.local.md, .agents, .claude, .cursor, .trae",
-    "package.json": ".editorconfig, .eslint*, .npmrc, .nvmrc, .vscode*, eslint*, pnpm*, package-lock.json, skills-lock.json, yarn*",
+    "package.json": ".editorconfig, .eslint*, .npmrc, .nvmrc, .vscode*, eslint*, pnpm*, package-lock.json, skills-lock.json, yarn*,commitlint*,husky*,lint-staged*",
     "README*": "LICENSE, LICENSE.*, README-*, README_*, README.*",
     "tsconfig.json": "tsconfig.*.json, tsconfig*.tsbuildinfo",
     "vite.config.*": "tsconfig.*, uno.config.*, unocss.config.*, vitest.config.*",
