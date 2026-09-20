@@ -5,7 +5,6 @@ import type { ArticleFormData, ArticleItem, ArticleQuery } from "@@/apis/types/d
 import { createArticle, deleteArticle, fetchArticlePage, updateArticle } from "@@/apis/demo-article"
 import CustomDialog from "@@/components/CustomDialog/index.vue"
 import CustomTable from "@@/components/CustomTable/index.vue"
-import { checkPermission } from "@@/utils/permission"
 import { useUserStore } from "@/pinia/stores/user"
 
 defineOptions({ name: "DemoArticle" })
@@ -22,7 +21,7 @@ const query = reactive<ArticleQuery>({
   status: ""
 })
 
-const pagination = reactive<TablePagination>({
+const pagination = ref<TablePagination>({
   pageCurrent: 1,
   pageSize: 10,
   total: 0
@@ -43,12 +42,7 @@ const formRules = {
   status: [{ required: true, message: "请选择状态", trigger: "change" }]
 }
 
-// 权限直接映射到页面动作，避免在模板中散落角色判断。
-const canCreate = computed(() => checkPermission(["demo:article:create"]))
-const canEdit = computed(() => checkPermission(["demo:article:edit"]))
-const canDelete = computed(() => checkPermission(["demo:article:delete"]))
-
-const columns: TableColumn<ArticleItem>[] = [
+const columns: TableColumn[] = [
   { prop: "id", label: "ID", width: 80 },
   { prop: "title", label: "标题", minWidth: 180 },
   { prop: "author", label: "作者", width: 120 },
@@ -62,12 +56,12 @@ async function getTableData() {
   try {
     // 查询条件保持原对象，分页参数单独提交，便于分页组件复用同一查询逻辑。
     const res = await fetchArticlePage({
-      pageCurrent: pagination.pageCurrent ?? 1,
-      pageSize: pagination.pageSize ?? 10,
+      pageCurrent: pagination.value.pageCurrent,
+      pageSize: pagination.value.pageSize,
       query: { ...query }
     })
     tableData.value = res.records
-    pagination.total = res.total
+    pagination.value.total = res.total
   } finally {
     loading.value = false
   }
@@ -75,7 +69,7 @@ async function getTableData() {
 
 function handleSearch() {
   // 查询条件变化后回到第一页，避免旧页码超出新的结果范围。
-  pagination.pageCurrent = 1
+  pagination.value.pageCurrent = 1
   getTableData()
 }
 
@@ -187,16 +181,9 @@ onMounted(getTableData)
     </el-card>
 
     <div class="toolbar">
-      <el-button v-if="canCreate" type="primary" @click="handleCreate">
+      <el-button type="primary" @click="handleCreate">
         新增文章
       </el-button>
-      <el-alert
-        v-else
-        type="info"
-        :closable="false"
-        title="当前账号无新增权限（user 角色仅演示只读+有限权限）"
-        show-icon
-      />
     </div>
 
     <CustomTable
@@ -213,10 +200,10 @@ onMounted(getTableData)
       </template>
 
       <template #actions="{ row }">
-        <el-button v-if="canEdit" type="warning" plain size="small" @click="handleUpdate(row)">
+        <el-button type="warning" plain size="small" @click="handleUpdate(row)">
           编辑
         </el-button>
-        <el-button v-if="canDelete" type="danger" plain size="small" @click="handleDelete(row)">
+        <el-button type="danger" plain size="small" @click="handleDelete(row)">
           删除
         </el-button>
       </template>

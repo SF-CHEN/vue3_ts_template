@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { FormRules } from "element-plus"
-import type { LoginFormData } from "./types"
-import { authApi } from "@@/apis/auth"
+import type { LoginSo } from "@@/apis/types/sys-user"
+import { loginSysUser } from "@@/apis/sys-user"
 import { useUserStore } from "@/pinia/stores/user"
 
 const route = useRoute()
@@ -10,9 +10,7 @@ const userStore = useUserStore()
 const loginFormRef = useTemplateRef("loginFormRef")
 const loading = ref(false)
 
-const isMock = import.meta.env.VITE_USE_MOCK === "true"
-
-const loginFormData = reactive<LoginFormData>({
+const loginFormData = reactive<LoginSo>({
   username: "admin",
   password: "123456"
 })
@@ -34,25 +32,19 @@ function handleLogin() {
     }
 
     loading.value = true
-    authApi.login({
-      username: loginFormData.username,
-      password: loginFormData.password
-    }).then((data) => {
-      // 登录接口同时返回用户资料，先写入 Store 可避免进入首页后再闪一次空用户状态。
+    loginSysUser({ ...loginFormData }).then((data) => {
+      if (!data.token) {
+        ElMessage.error("登录结果缺少 token")
+        return
+      }
       userStore.setToken(data.token)
-      userStore.setProfile({
-        id: data.user.id,
-        username: data.user.username,
-        roles: data.user.roles,
-        permissions: data.user.permissions
-      })
+      if (data.user) userStore.setProfile(data.user)
 
       // 未登录访问受限页面时，守卫会把原地址放进 redirect；登录后优先回到原页面。
       router.push(route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/")
-    }).catch((error: Error) => {
-      // 登录失败清空密码，避免错误凭据继续留在输入框中被重复提交。
+    }).catch(() => {
+      // 通用错误已由 request 层提示；清空密码避免错误凭据被重复提交。
       loginFormData.password = ""
-      ElMessage.error(error.message || "登录失败")
     }).finally(() => {
       loading.value = false
     })
@@ -75,12 +67,7 @@ function handleLogin() {
             <h1>Vue Admin Template</h1>
           </div>
           <p class="login-subtitle">
-            <template v-if="isMock">
-              管理后台模板 · Mock 账号 admin / user，密码任意
-            </template>
-            <template v-else>
-              管理后台模板 · 请使用企业账号登录
-            </template>
+            管理后台 · 请使用系统账号登录
           </p>
         </div>
 
@@ -94,11 +81,7 @@ function handleLogin() {
             @keyup.enter="handleLogin"
           >
             <el-form-item class="form-group" label="用户名" prop="username">
-              <el-input
-                v-model.trim="loginFormData.username"
-                placeholder="admin 或 user"
-                size="large"
-              >
+              <el-input v-model.trim="loginFormData.username" placeholder="请输入用户名" size="large">
                 <template #prefix>
                   <el-icon><span class="i-ep-user" /></el-icon>
                 </template>
@@ -117,13 +100,7 @@ function handleLogin() {
                 </template>
               </el-input>
             </el-form-item>
-            <el-button
-              class="login-btn"
-              type="primary"
-              size="large"
-              :loading="loading"
-              @click.prevent="handleLogin"
-            >
+            <el-button class="login-btn" type="primary" size="large" :loading="loading" @click.prevent="handleLogin">
               <el-icon v-if="!loading">
                 <span class="i-ep-right" />
               </el-icon>

@@ -47,7 +47,6 @@ src/pinia/stores/<domain>.ts
 
 - 使用 `<script setup lang="ts">`。
 - 查询、编辑、CRUD 表单默认直接使用 Element Plus。
-- 只有 schema / 动态字段场景才使用 `CustomForm`。
 - 普通列表可使用 `CustomTable`；标签、按钮、链接、复杂单元格使用 slot。
 - 表单字段与后端 payload 一致时直接提交表单对象。
 - 页面局部状态留在页面；跨页面共享才使用 Pinia。

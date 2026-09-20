@@ -1,5 +1,5 @@
 import type { ArticleFormData, ArticleItem, ArticlePage, ArticleQuery } from "./types/demo-article"
-import { request } from "@/http/axios"
+import { request } from "@@/apis/request"
 
 /** 本地内存 Mock，演示 CRUD；接入真实后端时替换为本文件中的 request 调用即可 */
 let seed = 3
@@ -95,22 +95,7 @@ const realArticleApi = {
 
 const articleApi = import.meta.env.VITE_USE_MOCK === "true" ? mockArticleApi : realArticleApi
 
-export function fetchArticlePage(params: {
-  pageCurrent: number
-  pageSize: number
-  query: ArticleQuery
-}) {
-  return articleApi.fetchPage(params)
-}
-
-export function createArticle(data: ArticleFormData) {
-  return articleApi.create(data)
-}
-
-export function updateArticle(data: ArticleFormData) {
-  return articleApi.update(data)
-}
-
-export function deleteArticle(id: number) {
-  return articleApi.delete(id)
-}
+export const fetchArticlePage = articleApi.fetchPage
+export const createArticle = articleApi.create
+export const updateArticle = articleApi.update
+export const deleteArticle = articleApi.delete

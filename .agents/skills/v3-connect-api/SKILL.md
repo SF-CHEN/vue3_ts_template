@@ -27,6 +27,8 @@ pnpm api:generate
 - `src/common/constants/options.ts`
 - `src/common/constants/registry.ts`
 
+生成约定（`<generated>`、`@keep`、options 中文 label 保留规则）见 `docs/API_GENERATE.md`。
+
 生成器默认面向 JSON 请求与 `{ code, data, message }` 响应模型。生成后要检查 OpenAPI 中是否存在：
 
 - `multipart/form-data` 上传。

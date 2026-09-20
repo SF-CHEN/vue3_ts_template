@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Screenfull from "@@/components/Screenfull/index.vue"
-import { ROLE_ADMIN } from "@@/constants/roles"
+import { SYS_USER_USER_ROLE_OPTIONS } from "@@/constants/options"
 import { useAppStore } from "@/pinia/stores/app"
 import { useUserStore } from "@/pinia/stores/user"
 import { layoutsConfig } from "../../config"
@@ -13,7 +13,9 @@ const userStore = useUserStore()
 
 const pageTitle = computed(() => String(route.meta.showTitle || route.meta.title || "首页"))
 const isSubPage = computed(() => Boolean(route.meta.hidden))
-const isAdmin = computed(() => userStore.roles.includes(ROLE_ADMIN))
+const roleLabel = computed(() => {
+  return SYS_USER_USER_ROLE_OPTIONS.find(item => item.value === userStore.userRole)?.label || userStore.userRole || "-"
+})
 const userInitials = computed(() => userStore.username.substring(0, 2).toUpperCase())
 
 function toggleSidebar() {
@@ -72,7 +74,7 @@ function handleLogout() {
           <span class="user-avatar">{{ userInitials }}</span>
           <span class="user-meta">
             <strong class="user-name">{{ userStore.username }}</strong>
-            <span class="user-role">{{ isAdmin ? "管理员" : "普通用户" }}</span>
+            <span class="user-role">{{ roleLabel }}</span>
           </span>
           <span class="i-ep-arrow-down user-arrow" />
         </button>

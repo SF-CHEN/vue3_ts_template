@@ -1,5 +1,7 @@
-/** 管理员角色 */
-export const ROLE_ADMIN = "admin"
+import { SysUserUserRoleEnum } from "./enums"
 
-/** 普通用户角色 */
-export const ROLE_USER = "user"
+/** 系统管理员 */
+export const ROLE_ADMIN = SysUserUserRoleEnum.SYSTEM_ADMIN
+
+/** 一般用户 */
+export const ROLE_USER = SysUserUserRoleEnum.GENERAL_USER

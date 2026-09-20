@@ -1,21 +1,24 @@
 <script lang="ts" setup>
 import type { UploadFile } from "element-plus"
-import { downloadDemoFile, uploadDemoFile } from "@@/apis/demo-file"
+import type { UploadFile as UploadedFile } from "@@/apis/types/public"
+import { uploadPublic } from "@@/apis/public"
 
 const selectedFile = ref<File>()
 const uploadProgress = ref(0)
 const uploading = ref(false)
-const downloading = ref(false)
+const uploaded = ref<UploadedFile>()
 
 function handleFileChange(uploadFile: UploadFile) {
   // 只保留原始 File 给 API 层使用，Element Plus 的 UploadFile 类型不向下扩散。
   selectedFile.value = uploadFile.raw
   uploadProgress.value = 0
+  uploaded.value = undefined
 }
 
 function handleFileRemove() {
   selectedFile.value = undefined
   uploadProgress.value = 0
+  uploaded.value = undefined
 }
 
 async function handleUpload() {
@@ -28,35 +31,12 @@ async function handleUpload() {
   uploadProgress.value = 0
   try {
     // API 层把 Axios 进度事件转换成百分比，页面只维护展示状态。
-    const result = await uploadDemoFile(selectedFile.value, (percent) => {
+    uploaded.value = await uploadPublic(selectedFile.value, (percent) => {
       uploadProgress.value = percent
     })
-    ElMessage.success(`上传成功：${result.name}`)
+    ElMessage.success(`上传成功：${uploaded.value.oriFileName || ""}`)
   } finally {
     uploading.value = false
-  }
-}
-
-function saveBlob(blob: Blob, filename: string) {
-  // 浏览器保存动作属于 UI 边界，因此不放进通用 request 或 API 模块。
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement("a")
-  link.href = url
-  link.download = filename
-  link.click()
-
-  // 下载触发后及时释放临时 URL，避免长时间使用页面时累积浏览器资源。
-  URL.revokeObjectURL(url)
-}
-
-async function handleDownload() {
-  downloading.value = true
-  try {
-    // API 只负责拿到 Blob，文件名和用户触发的保存行为由当前页面决定。
-    const blob = await downloadDemoFile(1)
-    saveBlob(blob, "file-transfer-demo.txt")
-  } finally {
-    downloading.value = false
   }
 }
 </script>
@@ -67,54 +47,39 @@ async function handleDownload() {
       <template #header>
         <div>
           <div class="text-lg font-medium">
-            文件上传与下载
+            文件上传
           </div>
           <div class="mt-1 text-sm text-gray-500">
-            演示 FormData、上传进度和 Blob 下载，页面不直接使用 Axios。
+            调用 `/public/upload`，页面不直接使用 Axios。
           </div>
         </div>
       </template>
 
-      <div class="max-w-2xl space-y-8">
-        <section>
-          <h3 class="mb-3 font-medium">
-            文件上传
-          </h3>
-          <el-upload
-            :auto-upload="false"
-            :limit="1"
-            :on-change="handleFileChange"
-            :on-remove="handleFileRemove"
-          >
-            <el-button>选择文件</el-button>
-          </el-upload>
+      <div class="max-w-2xl space-y-6">
+        <el-upload
+          :auto-upload="false"
+          :limit="1"
+          :on-change="handleFileChange"
+          :on-remove="handleFileRemove"
+        >
+          <el-button>选择文件</el-button>
+        </el-upload>
 
-          <el-progress v-if="uploadProgress > 0" class="mt-4" :percentage="uploadProgress" />
+        <el-progress v-if="uploadProgress > 0" :percentage="uploadProgress" />
 
-          <el-button
-            class="mt-4"
-            type="primary"
-            :loading="uploading"
-            :disabled="!selectedFile"
-            @click="handleUpload"
-          >
-            上传文件
-          </el-button>
-        </section>
+        <el-button
+          type="primary"
+          :loading="uploading"
+          :disabled="!selectedFile"
+          @click="handleUpload"
+        >
+          上传文件
+        </el-button>
 
-        <el-divider />
-
-        <section>
-          <h3 class="mb-2 font-medium">
-            Blob 下载
-          </h3>
-          <p class="mb-4 text-sm text-gray-500">
-            API 只返回 Blob，浏览器保存动作保留在页面交互边界。
-          </p>
-          <el-button type="primary" :loading="downloading" @click="handleDownload">
-            下载示例文件
-          </el-button>
-        </section>
+        <p v-if="uploaded" class="text-sm text-gray-500">
+          已上传：{{ uploaded.oriFileName }}
+          <span v-if="uploaded.saveUri">（{{ uploaded.saveUri }}）</span>
+        </p>
       </div>
     </el-card>
   </div>

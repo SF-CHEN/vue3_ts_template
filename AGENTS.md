@@ -89,8 +89,11 @@ tableData.value = res.records
 
 ## ESLint 与代码质量
 
-- `eslint.config.js` 是代码风格与 lint 规则的唯一事实来源，AGENTS.md 不重复维护具体格式规则。
-- 不手动猜测引号、换行、排序等可自动修复规则，优先交给 ESLint。
+- `eslint.config.js` 是代码风格与 lint 规则的机器事实来源。
+- **生成代码时必须直接符合规范**，可读摘要见 `docs/CODE_STYLE.md`（不要按 antfu 网上默认示例写单引号、尾逗号、stroustrup）。
+- 本仓库使用 `@antfu/eslint-config`，但覆盖为：双引号、无分号、无尾逗号、大括号 1tbs、允许短 if 单行、关闭 import 强制排序。
+- 没有 Prettier；不要新增 Prettier 配置，不要用 Prettier 格式化。
+- 写完后对本次改动执行 ESLint 自动修复，而不是先随意排版再指望全部被修好。
 - 不得为了让代码通过检查而关闭或降低 ESLint 规则。
 - 不得随意新增 `eslint-disable`；确有必要时必须限定到最小范围并说明原因。
 - 不得修改 TypeScript 配置降低类型检查强度来规避错误。
@@ -134,10 +137,7 @@ tableData.value = res.records
 
 ## 表单
 
-- 普通查询、编辑、CRUD 表单优先直接使用 Element Plus。
-- `CustomForm` 只用于明确需要 schema 驱动、动态字段或多处复用同一表单配置的场景。
-- `CustomForm` 使用固定内置字段；额外字段通过 slot 实现，不新增运行时字段 registry。
-- 不为了减少几行模板代码把普通表单改成 schema 配置。
+- 普通查询、编辑、CRUD 表单直接使用 Element Plus，不要为了少写几行模板改成 schema 配置。
 - 表单字段与后端 payload 一致时直接提交表单对象。
 - 只有需要字段转换时才额外创建 submit payload。
 - 简单一级对象复制使用 `{ ...obj }`，不默认使用 deep clone。
