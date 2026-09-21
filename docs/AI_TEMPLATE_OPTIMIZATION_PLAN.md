@@ -34,7 +34,7 @@
   - 明确 `constants/registry.ts` 是生成聚合文件，不代表业务允许新增 Registry。
   - 避免 AI 把生成器内部结构当作业务设计范例。
 
-- [ ] 5. 收敛 `AGENTS.md`
+- [x] 5. 收敛 `AGENTS.md`
   - 保留最高优先级原则、目录边界、禁止事项和验证规则。
   - 将组件、页面范式、Composables、Utils 等细节指向对应 docs。
   - 增加 git diff / 修改范围自检规则，限制 AI “顺手重构”。
