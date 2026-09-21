@@ -1,0 +1,66 @@
+# Vue3 AI 模板优化计划
+
+分支：`ui/layout-refresh`
+
+目标：在不引入大框架、复杂抽象和额外永久 Skill 的前提下，继续提升模板对 AI 编程的友好度，同时保持“代码简单、Token 少、人易维护”的方向。
+
+## 原则
+
+- 只在当前 `ui/layout-refresh` 分支修改，不新建分支。
+- 不引入 Monorepo、Schema Form、Schema Table、EventBus、Registry 框架、多布局系统。
+- 不新增永久 Skill，优先通过项目地图、页面范式和组件目录降低 AI 搜索成本。
+- 修改范围保持最小；每一项完成后更新本文件勾选状态。
+- 最终以 ESLint、TypeScript、测试和构建结果作为完成依据。
+
+## 执行清单
+
+- [ ] 1. 新增 `docs/PROJECT_MAP.md`
+  - 汇总页面、组件、Composables、Utils、API、Store、Router 等已有能力。
+  - 给 AI 一个低 Token 的“先看这里”入口。
+  - 明确哪些能力应复用，哪些场景不要继续抽象。
+
+- [ ] 2. 新增 `docs/PAGE_PATTERNS.md`
+  - 建立“需求类型 → 推荐参考页面”索引。
+  - 覆盖 CRUD、普通列表、权限按钮、上传下载、登录等现有样板。
+  - 页面 Skill 优先读索引，找不到再搜索仓库。
+
+- [ ] 3. 新增 `docs/COMPONENTS.md`
+  - 记录 `CustomTable`、`CustomDialog`、`Screenfull` 的适用边界。
+  - 明确特殊需求可以直接使用 Element Plus 原生组件。
+  - 防止 AI 把轻量组件继续扩展成复杂框架。
+
+- [ ] 4. 明确自动生成代码边界
+  - 在 `AGENTS.md` 中列出 API Generator 管理的生成区域。
+  - 明确 `constants/registry.ts` 是生成聚合文件，不代表业务允许新增 Registry。
+  - 避免 AI 把生成器内部结构当作业务设计范例。
+
+- [ ] 5. 收敛 `AGENTS.md`
+  - 保留最高优先级原则、目录边界、禁止事项和验证规则。
+  - 将组件、页面范式、Composables、Utils 等细节指向对应 docs。
+  - 增加 git diff / 修改范围自检规则，限制 AI “顺手重构”。
+
+- [ ] 6. 简化 Layout 跳转层级
+  - 将唯一的 `layouts/modes/LeftMode.vue` 合并到 `layouts/index.vue`。
+  - 删除已经没有多布局意义的 `modes` 中间层。
+  - 保持现有视觉和响应式行为不变。
+
+- [ ] 7. 更新 AI 工作流文档与页面 Skill
+  - `v3-generate-page` 优先读取 `PAGE_PATTERNS.md` 和 `PROJECT_MAP.md`。
+  - `docs/AI_SKILLS.md` 补充项目地图/页面范式/组件目录的职责。
+  - 不增加新的 `v3-use-utils` / `v3-use-composables` Skill。
+
+- [ ] 8. 最终验证
+  - 检查改动是否只覆盖本计划范围。
+  - 运行/确认 ESLint、TypeScript、Vitest、Build。
+  - 修复本次修改引入的问题。
+  - 全部完成后将本清单全部勾选。
+
+## 不在本轮范围
+
+- 新增多主题、多布局。
+- 引入 Schema Form / Schema Table。
+- 引入 EventBus。
+- 引入新的 Service / Repository / Manager / Registry 层。
+- 增加 Mock 框架。
+- 将项目改成 Monorepo。
+- 新增更多永久 Agent Skill。
