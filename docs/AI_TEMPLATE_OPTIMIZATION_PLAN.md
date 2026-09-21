@@ -29,7 +29,7 @@
   - 明确特殊需求可以直接使用 Element Plus 原生组件。
   - 防止 AI 把轻量组件继续扩展成复杂框架。
 
-- [ ] 4. 明确自动生成代码边界
+- [x] 4. 明确自动生成代码边界
   - 在 `AGENTS.md` 中列出 API Generator 管理的生成区域。
   - 明确 `constants/registry.ts` 是生成聚合文件，不代表业务允许新增 Registry。
   - 避免 AI 把生成器内部结构当作业务设计范例。
