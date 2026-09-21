@@ -24,7 +24,7 @@
   - 覆盖 CRUD、普通列表、权限按钮、上传下载、登录等现有样板。
   - 页面 Skill 优先读索引，找不到再搜索仓库。
 
-- [ ] 3. 新增 `docs/COMPONENTS.md`
+- [x] 3. 新增 `docs/COMPONENTS.md`
   - 记录 `CustomTable`、`CustomDialog`、`Screenfull` 的适用边界。
   - 明确特殊需求可以直接使用 Element Plus 原生组件。
   - 防止 AI 把轻量组件继续扩展成复杂框架。
