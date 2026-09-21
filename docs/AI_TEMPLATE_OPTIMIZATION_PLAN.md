@@ -86,7 +86,7 @@ GitHub Actions：`Quality Check #192`
 
 目标：5 个 Skill 只保留“任务触发 + 执行步骤 + 本 Skill 独有规则”，全局原则统一引用 `AGENTS.md`，页面/组件/项目能力统一引用 docs，避免重复消耗上下文。
 
-- [ ] 9. 精简 `v3-generate-page`
+- [x] 9. 精简 `v3-generate-page`
   - 删除与 `AGENTS.md`、`PAGE_PATTERNS.md`、`COMPONENTS.md` 重复的编码规则。
   - 只保留页面任务入口、参考顺序、关联 Skill 和完成步骤。
 
