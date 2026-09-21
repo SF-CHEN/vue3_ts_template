@@ -90,7 +90,7 @@ GitHub Actions：`Quality Check #192`
   - 删除与 `AGENTS.md`、`PAGE_PATTERNS.md`、`COMPONENTS.md` 重复的编码规则。
   - 只保留页面任务入口、参考顺序、关联 Skill 和完成步骤。
 
-- [ ] 10. 精简 `v3-connect-api`
+- [x] 10. 精简 `v3-connect-api`
   - 修正旧请求层路径和过时约定。
   - 保留 Swagger、特殊接口、上传/下载、全局 request 修改门槛等接口专属规则。
   - 删除通用架构/编码原则重复描述。
