@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@12.5.1",
   "description": "Vue 3 admin template with Vite, TypeScript, Element Plus, Pinia and UnoCSS",
   "scripts": {
     "dev": "vite",
