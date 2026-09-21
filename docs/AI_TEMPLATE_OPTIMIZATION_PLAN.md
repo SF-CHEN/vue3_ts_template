@@ -39,7 +39,7 @@
   - 将组件、页面范式、Composables、Utils 等细节指向对应 docs。
   - 增加 git diff / 修改范围自检规则，限制 AI “顺手重构”。
 
-- [ ] 6. 简化 Layout 跳转层级
+- [x] 6. 简化 Layout 跳转层级
   - 将唯一的 `layouts/modes/LeftMode.vue` 合并到 `layouts/index.vue`。
   - 删除已经没有多布局意义的 `modes` 中间层。
   - 保持现有视觉和响应式行为不变。
