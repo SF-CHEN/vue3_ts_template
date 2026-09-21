@@ -14,7 +14,7 @@
 
 ## 执行清单
 
-- [ ] 1. 新增 `docs/PROJECT_MAP.md`
+- [x] 1. 新增 `docs/PROJECT_MAP.md`
   - 汇总页面、组件、Composables、Utils、API、Store、Router 等已有能力。
   - 给 AI 一个低 Token 的“先看这里”入口。
   - 明确哪些能力应复用，哪些场景不要继续抽象。
