@@ -49,7 +49,7 @@
   - `docs/AI_SKILLS.md` 补充项目地图/页面范式/组件目录的职责。
   - 不增加新的 `v3-use-utils` / `v3-use-composables` Skill。
 
-- [ ] 8. 最终验证
+- [x] 8. 最终验证
   - 检查改动是否只覆盖本计划范围。
   - 运行/确认 ESLint、TypeScript、Vitest、Build。
   - 修复本次修改引入的问题。
@@ -64,3 +64,19 @@
 - 增加 Mock 框架。
 - 将项目改成 Monorepo。
 - 新增更多永久 Agent Skill。
+
+
+## 本轮验证结果
+
+验证基准提交：`8b651e9c07bafc8d948df3f0d312f4c90c79993f`
+
+GitHub Actions：`Quality Check #192`
+
+- [x] Install dependencies
+- [x] ESLint + TypeScript typecheck
+- [x] Vitest
+- [x] Vite build
+- [x] 本轮 diff 仅包含计划范围内文件
+- [x] `src/layouts/modes/LeftMode.vue` 已删除，合并后的布局通过构建检查
+
+> 本验证之后仅更新本计划文档的勾选与验证记录，不影响应用代码。
