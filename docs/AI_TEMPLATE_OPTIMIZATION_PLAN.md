@@ -95,7 +95,7 @@ GitHub Actions：`Quality Check #192`
   - 保留 Swagger、特殊接口、上传/下载、全局 request 修改门槛等接口专属规则。
   - 删除通用架构/编码原则重复描述。
 
-- [ ] 11. 精简 `v3-upsert-route`
+- [x] 11. 精简 `v3-upsert-route`
   - 保留路由放置位置、权限语义、菜单图标联动和路由检查。
   - 删除已由 `AGENTS.md` 统一约束的通用禁止项。
 
