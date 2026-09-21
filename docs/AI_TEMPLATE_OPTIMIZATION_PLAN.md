@@ -99,7 +99,7 @@ GitHub Actions：`Quality Check #192`
   - 保留路由放置位置、权限语义、菜单图标联动和路由检查。
   - 删除已由 `AGENTS.md` 统一约束的通用禁止项。
 
-- [ ] 12. 精简 `v3-upsert-store`
+- [x] 12. 精简 `v3-upsert-store`
   - 保留“是否需要 Store”的判断和 setup 外访问规则。
   - 删除重复的架构和代码风格说明。
 
