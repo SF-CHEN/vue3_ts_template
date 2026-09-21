@@ -103,7 +103,7 @@ GitHub Actions：`Quality Check #192`
   - 保留“是否需要 Store”的判断和 setup 外访问规则。
   - 删除重复的架构和代码风格说明。
 
-- [ ] 13. 精简 `v3-use-icons`
+- [x] 13. 精简 `v3-use-icons`
   - 保留 Iconify / 本地 SVG 选择与路由 safelist 规则。
   - 删除重复禁止项和冗长示例。
 
