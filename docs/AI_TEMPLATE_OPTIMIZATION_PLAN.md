@@ -107,8 +107,36 @@ GitHub Actions：`Quality Check #192`
   - 保留 Iconify / 本地 SVG 选择与路由 safelist 规则。
   - 删除重复禁止项和冗长示例。
 
-- [ ] 14. 第二阶段最终验证
+- [x] 14. 第二阶段最终验证
   - 对比 5 个 Skill 前后总大小。
   - 检查 Skill 间职责是否仍有明显重复。
   - 确认没有新增 Skill。
   - GitHub Actions 中 lint / typecheck / test / build 全部通过。
+
+
+## 第二阶段验证结果
+
+验证基准提交：`ab19d45f4b773fc52f64f4fa8b84fd8c1018f181`
+
+GitHub Actions：`Quality Check #199`
+
+- [x] ESLint + TypeScript typecheck
+- [x] Vitest
+- [x] Vite build
+- [x] 没有新增 Skill
+- [x] 本轮 diff 仅包含 5 个 Skill 和计划文档
+
+Skill 大小变化：
+
+| Skill | 优化前 | 优化后 | 减少 |
+|---|---:|---:|---:|
+| `v3-connect-api` | 6550 B | 3328 B | 49% |
+| `v3-generate-page` | 4319 B | 1604 B | 63% |
+| `v3-upsert-route` | 2739 B | 1714 B | 37% |
+| `v3-upsert-store` | 2444 B | 1434 B | 41% |
+| `v3-use-icons` | 3088 B | 1477 B | 52% |
+| **合计** | **19140 B** | **9557 B** | **约 50%** |
+
+本轮同时修正了接口 Skill 中已过时的请求层路径：统一以 `src/common/apis/request.ts` 为准。
+
+> 本验证之后仅更新本计划文档的勾选与验证记录，不影响 Skill 或应用代码。
