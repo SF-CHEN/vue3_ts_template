@@ -10,6 +10,19 @@
 - `v3-upsert-store`：真正跨页面共享的 Pinia 状态；不负责页面局部状态。
 - `v3-use-icons`：UnoCSS Iconify、本地 SVG、路由菜单图标 safelist；不负责页面布局设计。
 
+
+## AI 导航文档
+
+Skill 负责“怎么执行一类工作流”，以下文档负责“项目已经有什么、应该参考谁”：
+
+- `docs/PROJECT_MAP.md`：项目能力地图。AI 在新增能力前先查这里，减少全仓库搜索和重复造轮子。
+- `docs/PAGE_PATTERNS.md`：页面范式索引。页面任务优先选择一个主要参考页面，找不到再搜索。
+- `docs/COMPONENTS.md`：通用组件能力和边界。明确复杂需求可以直接使用 Element Plus，不强行扩展薄封装组件。
+- `docs/COMPOSABLES.md`：内置 Composables 速查。
+- `docs/UTILS.md`：内置 Utils 速查。
+
+这几个文档不拆成额外 Skill，避免增加 Skill 选择成本和重复上下文。
+
 ## 为什么接口单独做 Skill
 
 接口对接不只发生在“生成页面”时，还包括：
@@ -30,12 +43,12 @@
 
 ## 为什么不继续增加更多 Skill
 
-以下内容由 `AGENTS.md` 和现有文档约束即可：
+以下内容由 `AGENTS.md`、项目地图和现有文档约束即可：
 
 - TypeScript 规范。
 - ESLint 规范。
-- Composable 使用。
-- Utils 使用。
+- Composable 使用（`docs/COMPOSABLES.md`）。
+- Utils 使用（`docs/UTILS.md`）。
 - 普通组件开发。
 
 这些规则多数属于全局编码约定，不需要独立工作流。Skill 过多会增加 AI 选择成本、重复规则和上下文 Token。
