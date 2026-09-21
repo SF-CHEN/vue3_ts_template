@@ -80,3 +80,35 @@ GitHub Actions：`Quality Check #192`
 - [x] `src/layouts/modes/LeftMode.vue` 已删除，合并后的布局通过构建检查
 
 > 本验证之后仅更新本计划文档的勾选与验证记录，不影响应用代码。
+
+
+## 第二阶段：Skill 去重瘦身
+
+目标：5 个 Skill 只保留“任务触发 + 执行步骤 + 本 Skill 独有规则”，全局原则统一引用 `AGENTS.md`，页面/组件/项目能力统一引用 docs，避免重复消耗上下文。
+
+- [ ] 9. 精简 `v3-generate-page`
+  - 删除与 `AGENTS.md`、`PAGE_PATTERNS.md`、`COMPONENTS.md` 重复的编码规则。
+  - 只保留页面任务入口、参考顺序、关联 Skill 和完成步骤。
+
+- [ ] 10. 精简 `v3-connect-api`
+  - 修正旧请求层路径和过时约定。
+  - 保留 Swagger、特殊接口、上传/下载、全局 request 修改门槛等接口专属规则。
+  - 删除通用架构/编码原则重复描述。
+
+- [ ] 11. 精简 `v3-upsert-route`
+  - 保留路由放置位置、权限语义、菜单图标联动和路由检查。
+  - 删除已由 `AGENTS.md` 统一约束的通用禁止项。
+
+- [ ] 12. 精简 `v3-upsert-store`
+  - 保留“是否需要 Store”的判断和 setup 外访问规则。
+  - 删除重复的架构和代码风格说明。
+
+- [ ] 13. 精简 `v3-use-icons`
+  - 保留 Iconify / 本地 SVG 选择与路由 safelist 规则。
+  - 删除重复禁止项和冗长示例。
+
+- [ ] 14. 第二阶段最终验证
+  - 对比 5 个 Skill 前后总大小。
+  - 检查 Skill 间职责是否仍有明显重复。
+  - 确认没有新增 Skill。
+  - GitHub Actions 中 lint / typecheck / test / build 全部通过。
