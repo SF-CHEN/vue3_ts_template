@@ -44,7 +44,7 @@
   - 删除已经没有多布局意义的 `modes` 中间层。
   - 保持现有视觉和响应式行为不变。
 
-- [ ] 7. 更新 AI 工作流文档与页面 Skill
+- [x] 7. 更新 AI 工作流文档与页面 Skill
   - `v3-generate-page` 优先读取 `PAGE_PATTERNS.md` 和 `PROJECT_MAP.md`。
   - `docs/AI_SKILLS.md` 补充项目地图/页面范式/组件目录的职责。
   - 不增加新的 `v3-use-utils` / `v3-use-composables` Skill。
