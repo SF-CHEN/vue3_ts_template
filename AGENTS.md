@@ -171,6 +171,23 @@ tableData.value = res.records
 - 开发代理使用 `DEV_PROXY_TARGET`，Swagger 脚本使用 `SWAGGER_URL`，不要为了方便改成 `VITE_*`。
 - 密钥、内网凭证等敏感信息禁止放入 `VITE_*`。
 
+## 自动生成区域
+
+以下内容主要由 API Generator 管理：
+
+```text
+src/common/apis/types/**
+src/common/constants/enums.ts
+src/common/constants/options.ts
+src/common/constants/registry.ts
+src/common/apis/docs/api.md
+```
+
+- 普通业务代码不要把这些生成文件里的结构当作架构设计范例。
+- `src/common/constants/registry.ts` 只用于聚合生成的 Enum / Options；“禁止新增 Registry”规则仍然适用于普通业务代码。
+- 需要调整生成结果时优先修改 `script/generate-api.cjs` / `script/doc.cjs`，不要批量手改生成区。
+- `options.ts` 等带有明确自定义保留区的文件，只在保留区内手写扩展。
+
 ## 样式
 
 - UnoCSS 负责布局、间距、尺寸和简单样式（统一 class 模式）。
