@@ -13,9 +13,11 @@ description: Create or modify Vue 3 business pages, CRUD pages, list/detail/edit
 ## 开始前
 
 1. 阅读根目录 `AGENTS.md`。
-2. 搜索 1 个最相似且仍在使用的页面；CRUD 默认参考 `src/pages/demo/article/index.vue`。
-3. 只读取目标页面及直接依赖，不默认扫描整个仓库。
-4. 先判断本次是否需要：API、路由、Store、图标。
+2. 阅读 `docs/PROJECT_MAP.md`，确认项目是否已经有可复用能力。
+3. 阅读 `docs/PAGE_PATTERNS.md`，按需求类型选择 1 个主要参考页面。
+4. 只有页面范式没有覆盖当前需求时，才搜索仓库寻找最相似且仍在使用的实现。
+5. 只读取目标页面及直接依赖，不默认扫描整个仓库。
+6. 先判断本次是否需要：API、路由、Store、图标。
 
 涉及以下内容时同时遵循对应 Skill：
 
@@ -48,6 +50,7 @@ src/pinia/stores/<domain>.ts
 - 使用 `<script setup lang="ts">`。
 - 查询、编辑、CRUD 表单默认直接使用 Element Plus。
 - 普通列表可使用 `CustomTable`；标签、按钮、链接、复杂单元格使用 slot。
+- 使用或修改通用组件前参考 `docs/COMPONENTS.md`；复杂场景允许直接使用 Element Plus，不为了单页需求扩大通用组件 API。
 - 表单字段与后端 payload 一致时直接提交表单对象。
 - 页面局部状态留在页面；跨页面共享才使用 Pinia。
 - 通用错误由 request 层处理时，页面不要重复 `catch + ElMessage.error`。
@@ -92,7 +95,7 @@ function handleSearch() {
 
 ## 完成检查
 
-- 是否只参考了一套现有写法？
+- 是否通过 `PAGE_PATTERNS.md` 只选择了一套主要参考写法？
 - 是否能在 1～3 个主要文件内理解功能？
 - 关键业务逻辑是否有适量解释意图/原因的注释？
 - 是否存在逐行翻译代码的无意义注释？
