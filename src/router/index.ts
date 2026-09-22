@@ -113,6 +113,16 @@ export const dynamicRoutes: RouteRecordRaw[] = [
           icon: "fa-solid:file-alt",
           roles: [ROLE_ADMIN]
         }
+      },
+      {
+        path: "pdf",
+        component: () => import("@/pages/demo/pdf/index.vue"),
+        name: "DemoPdf",
+        meta: {
+          title: "PDF 导出",
+          icon: "ep:document",
+          roles: [ROLE_ADMIN, ROLE_USER]
+        }
       }
     ]
   }

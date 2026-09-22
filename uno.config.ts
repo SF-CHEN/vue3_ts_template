@@ -8,6 +8,7 @@ const FA_SOLID_SAFELIST = [
 const EP_SAFELIST = [
   "arrow-down",
   "arrow-left",
+  "document",
   "expand",
   "fold",
   "home-filled",
