@@ -7,7 +7,6 @@ import App from "@/App.vue"
 import "normalize.css"
 import "nprogress/nprogress.css"
 import "element-plus/dist/index.css"
-import "element-plus/theme-chalk/dark/css-vars.css"
 import "@@/assets/styles/index.scss"
 import "virtual:uno.css"
 

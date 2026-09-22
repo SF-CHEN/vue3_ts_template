@@ -15,6 +15,7 @@ export function registerNavigationGuard(router: Router) {
   router.beforeEach(async (to) => {
     NProgress.start()
 
+    // 未登录时保留原目标地址，登录成功后可以回到用户最初访问的页面。
     if (!getToken()) {
       if (PUBLIC_PATHS.has(to.path)) return true
       return { path: LOGIN_PATH, query: { redirect: to.fullPath } }
@@ -23,6 +24,8 @@ export function registerNavigationGuard(router: Router) {
     if (to.path === LOGIN_PATH) return "/"
 
     const userStore = useUserStore()
+
+    // 用户信息和动态路由只需要在刷新后的首次导航中初始化一次。
     if (userStore.isGotUserInfo) return true
 
     try {
@@ -35,8 +38,10 @@ export function registerNavigationGuard(router: Router) {
       })
       permissionStore.addRoutes.forEach(route => router.addRoute(route))
 
+      // 动态路由刚注册时替换当前导航，让 Vue Router 用新路由表重新匹配目标页面。
       return { ...to, replace: true }
     } catch {
+      // Token 失效或用户信息加载失败时清理登录态，避免继续携带无效会话反复导航。
       userStore.resetToken()
       return { path: LOGIN_PATH, query: { redirect: to.fullPath } }
     }

@@ -18,8 +18,8 @@ export default defineConfig(({ mode }) => {
     base: publicPath,
     resolve: {
       alias: {
-        "@": resolve(__dirname, "src"),
-        "@@": resolve(__dirname, "src/common")
+        "@": resolve(import.meta.dirname, "src"),
+        "@@": resolve(import.meta.dirname, "src/common")
       }
     },
     server: {
@@ -37,10 +37,10 @@ export default defineConfig(({ mode }) => {
     plugins: [
       vue(),
       SvgComponent({
-        iconDir: [resolve(__dirname, "src/common/assets/icons")],
-        preserveColor: resolve(__dirname, "src/common/assets/icons/preserve-color"),
+        iconDir: [resolve(import.meta.dirname, "src/common/assets/icons")],
+        preserveColor: resolve(import.meta.dirname, "src/common/assets/icons/preserve-color"),
         dts: true,
-        dtsDir: resolve(__dirname, "types/auto")
+        dtsDir: resolve(import.meta.dirname, "types/auto")
       }),
       UnoCSS(),
       AutoImport({

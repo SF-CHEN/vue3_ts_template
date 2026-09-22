@@ -91,7 +91,6 @@ export const dynamicRoutes: RouteRecordRaw[] = [
           title: "文章管理",
           icon: "fa-solid:file-alt",
           roles: [ROLE_ADMIN, ROLE_USER],
-          permissions: ["demo:article:list"],
           keepAlive: true
         }
       },
@@ -102,8 +101,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         meta: {
           title: "用户管理",
           icon: "ep:user",
-          roles: [ROLE_ADMIN],
-          permissions: ["demo:user:list"]
+          roles: [ROLE_ADMIN]
         }
       },
       {
@@ -113,8 +111,17 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         meta: {
           title: "文件传输",
           icon: "fa-solid:file-alt",
-          roles: [ROLE_ADMIN],
-          permissions: ["demo:file:transfer"]
+          roles: [ROLE_ADMIN]
+        }
+      },
+      {
+        path: "pdf",
+        component: () => import("@/pages/demo/pdf/index.vue"),
+        name: "DemoPdf",
+        meta: {
+          title: "PDF 导出",
+          icon: "ep:document",
+          roles: [ROLE_ADMIN, ROLE_USER]
         }
       }
     ]

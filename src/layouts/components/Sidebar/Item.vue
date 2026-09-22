@@ -98,7 +98,7 @@ function resolvePath(routePath: string) {
 </template>
 
 <style lang="scss" scoped>
-@import "@@/assets/styles/mixins.scss";
+@use "@@/assets/styles/mixins.scss";
 
 .svg-icon {
   min-width: 12px;

@@ -1,18 +1,20 @@
 <script lang="ts" setup>
-import { ROLE_ADMIN } from "@@/constants/roles"
+import { SYS_USER_USER_ROLE_OPTIONS } from "@@/constants/options"
 import { useUserStore } from "@/pinia/stores/user"
 
 defineOptions({ name: "Dashboard" })
 
 const userStore = useUserStore()
 
-const isAdmin = computed(() => userStore.roles.includes(ROLE_ADMIN))
+const roleLabel = computed(() => {
+  return SYS_USER_USER_ROLE_OPTIONS.find(item => item.value === userStore.userRole)?.label || userStore.userRole || "-"
+})
 
 const tips = [
   { title: "路由", desc: "在 src/router/index.ts 的 dynamicRoutes 中注册新页面" },
   { title: "API", desc: "在 src/common/apis 下新增接口，认证请改 auth.ts 适配层" },
   { title: "Store", desc: "在 src/pinia/stores 按模块新增状态" },
-  { title: "CRUD", desc: "参考「示例 → 文章管理」使用 CustomTable / Form / Dialog" }
+  { title: "CRUD", desc: "参考「示例 → 文章管理」使用 CustomTable + Element Plus 表单" }
 ]
 </script>
 
@@ -22,7 +24,7 @@ const tips = [
       <h2>欢迎使用 Vue Admin Template</h2>
       <p>
         当前用户：<strong>{{ userStore.username || "-" }}</strong>
-        · 角色：{{ isAdmin ? "管理员" : "普通用户" }}
+        · 角色：{{ roleLabel }}
       </p>
       <p class="hint">
         这是模板首页。左侧「示例」菜单中有完整 CRUD 演示页面。

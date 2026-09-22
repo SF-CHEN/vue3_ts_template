@@ -15,7 +15,14 @@ export default antfu(
       semi: false
     },
     // 忽略文件
-    ignores: ["*/skills", "**/skills/**", "docs/VUE3_AI_TEMPLATE_REVIEW.md"]
+    ignores: [
+      "*/skills",
+      "**/skills/**",
+      // docs 里的代码块会故意展示反例（stroustrup、单行标签等），不能按源码规则检查
+      "docs/**",
+      // OpenAPI 生成的接口说明，给 AI 阅读，不走源码风格检查
+      "src/common/apis/docs/**"
+    ]
   },
   {
     // 对所有文件都生效的规则

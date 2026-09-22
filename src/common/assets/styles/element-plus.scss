@@ -8,23 +8,63 @@
   --el-form-label-font-size: var(--el-font-size-base);
 }
 
+// 卡片统一使用轻边框和柔和阴影，避免默认组件感过强
+.el-card {
+  border-color: var(--app-border-light);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow-soft);
+}
+
+.el-card__header {
+  padding: 16px 20px;
+  border-bottom-color: var(--app-border-light);
+}
+
+.el-card__body {
+  padding: 20px;
+}
+
+// 表格保持轻量层次，表头不使用大面积灰底
+.el-table {
+  --el-table-border-color: var(--app-border-light);
+  --el-table-header-bg-color: #f8fafc;
+  --el-table-row-hover-bg-color: #f8fbff;
+  border-radius: 8px;
+}
+
+.el-table th.el-table__cell {
+  color: #475569;
+  font-weight: 600;
+}
+
+// 输入控件统一稍圆润，但不过度胶囊化
+.el-input__wrapper,
+.el-select__wrapper,
+.el-textarea__inner {
+  border-radius: 8px;
+}
+
+.el-button {
+  border-radius: 8px;
+}
+
 // 弹窗中性通用样式
 .el-dialog {
-  border-radius: 8px;
   overflow: hidden;
-  box-shadow: var(--el-box-shadow-light);
+  border-radius: 12px;
+  box-shadow: var(--app-shadow);
 }
 
 .el-dialog__header {
   padding: 16px 20px;
   margin-right: 0;
-  border-bottom: 1px solid var(--el-border-color-lighter);
+  border-bottom: 1px solid var(--app-border-light);
 }
 
 .el-dialog__title {
+  color: var(--app-dark);
   font-size: 16px;
-  font-weight: 500;
-  color: var(--el-text-color-primary);
+  font-weight: 600;
 }
 
 .el-dialog__body {
@@ -34,12 +74,20 @@
 .el-dialog__footer {
   padding: 12px 20px;
   text-align: right;
-  border-top: 1px solid var(--el-border-color-lighter);
+  border-top: 1px solid var(--app-border-light);
+}
+
+.el-dropdown-menu {
+  padding: 6px;
+  border-radius: 10px;
+}
+
+.el-dropdown-menu__item {
+  border-radius: 7px;
 }
 
 // 分页
 .el-pagination {
-  // 参考 Bootstrap 的响应式设计 WIDTH = 768
   @media screen and (max-width: 768px) {
     .el-pagination__total,
     .el-pagination__sizes,

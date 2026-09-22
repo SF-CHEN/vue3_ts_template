@@ -26,7 +26,7 @@ const OPTIONS_FILE = path.join(CONSTANTS_DIR, "options.ts")
 const REGISTRY_FILE = path.join(CONSTANTS_DIR, "registry.ts")
 
 /** 基础请求工具的引入路径 */
-const IMPORT_REQUEST_STR = "import { request } from \"@/http/axios\""
+const IMPORT_REQUEST_STR = "import { request } from \"@@/apis/request\""
 
 /** URL 前缀过滤（业务无关前缀，如网关 temp） */
 const URL_PREFIX_REPLACE = { from: "/temp", to: "" }
@@ -41,6 +41,77 @@ const HTTP_METHODS = new Set(["get", "post", "put", "delete", "patch", "head", "
 const GEN_START = "/* <generated> */"
 const GEN_END = "/* </generated> */"
 // =========================================
+
+function buildFileMetaComment({ input, output, pos }) {
+  return [
+    "/**",
+    ` * [INPUT]: ${input}`,
+    ` * [OUTPUT]: ${output}`,
+    ` * [POS]: ${pos}`,
+    " */"
+  ].join("\n")
+}
+
+function buildApiFileComment(moduleName) {
+  return buildFileMetaComment({
+    input: `由 OpenAPI 的 ${moduleName} paths 生成，并依赖 @@/apis/request 的 request`,
+    output: `对外提供 ${moduleName} 模块的类型安全 API 请求函数`,
+    pos: "src/common/apis 的自动生成 API 模块，供页面直接调用；同文件 <generated> 外可手写适配"
+  })
+}
+
+function buildTypesFileComment(moduleName) {
+  return buildFileMetaComment({
+    input: `由 OpenAPI 的 ${moduleName} schemas / 请求参数生成`,
+    output: `对外提供 ${moduleName} 模块的请求与响应契约类型`,
+    pos: "src/common/apis/types 的自动生成类型文件，重新生成会整文件覆盖"
+  })
+}
+
+function buildEnumsFileComment() {
+  return buildFileMetaComment({
+    input: "由 OpenAPI schema 中的 enum 字段生成",
+    output: "对外提供枚举常量与联合类型",
+    pos: "src/common/constants/enums.ts；</generated> 下方可手写扩展"
+  })
+}
+
+function buildOptionsFileComment() {
+  return buildFileMetaComment({
+    input: "由 enums 生成下拉选项；label 缺省时从 OpenAPI 描述解析中文，已有非空 label 按 value 保留",
+    output: "对外提供 Select / Radio / Checkbox 使用的选项数组",
+    pos: "src/common/constants/options.ts；</generated> 下方可手写自定义选项"
+  })
+}
+
+function buildRegistryFileComment() {
+  return buildFileMetaComment({
+    input: "聚合 enums.ts 与 options.ts（含 options 自定义区导出）",
+    output: "对外提供 Enum / Options 统一入口",
+    pos: "src/common/constants/registry.ts；</generated> 下方可手写扩展"
+  })
+}
+
+const FILE_META_COMMENT_RE = /^\/\*\*\r?\n(?: \*.*\r?\n)* \*\/\r?\n*/
+
+function hasFileMetaComment(block) {
+  return /\[INPUT\]:/.test(block) && /\[OUTPUT\]:/.test(block) && /\[POS\]:/.test(block)
+}
+
+/** 写入或更新文件头 [INPUT]/[OUTPUT]/[POS] 注释，不碰文件其它 JSDoc */
+function upsertFileMetaComment(content, comment) {
+  const meta = content.match(FILE_META_COMMENT_RE)
+  if (meta && hasFileMetaComment(meta[0])) {
+    return `${comment}\n\n${content.slice(meta[0].length).replace(/^\s+/, "")}`
+  }
+
+  const autoGen = content.match(/^\/\*\* Auto-generated[^*]*\*\/\s*/)
+  if (autoGen) {
+    return `${comment}\n\n${content.slice(autoGen[0].length).replace(/^\s+/, "")}`
+  }
+
+  return `${comment}\n\n${content.replace(/^\s+/, "")}`
+}
 
 /** 转义正则特殊字符 */
 function escapeRegExp(str) {
@@ -172,7 +243,7 @@ function resolveGeneratedFunctions(functions, existingContent, relPath) {
 
 /**
  * 合并模块文件：仅替换 <generated> 标记内的内容，保留标记外的自定义代码
- * import 顺序：type-sibling 在前，value-internal（@/http/axios）在后（符合 ESLint perfectionist）
+ * import 顺序：type-sibling 在前，value-internal（@@/apis/request）在后（符合 ESLint perfectionist）
  */
 function mergeModuleFile(filePath, functions, typeImports, moduleName) {
   const relPath = path.relative(process.cwd(), filePath)
@@ -192,7 +263,7 @@ function mergeModuleFile(filePath, functions, typeImports, moduleName) {
   const generatedBlock = `${GEN_START}\n${generatedBody}\n${GEN_END}`
 
   if (!existing) {
-    return `${header}${generatedBlock}\n`
+    return `${buildApiFileComment(moduleName)}\n\n${header}${generatedBlock}\n`
   }
 
   const pattern = new RegExp(
@@ -216,13 +287,13 @@ function mergeModuleFile(filePath, functions, typeImports, moduleName) {
         updated = `${typeImportLine}${updated}`
       }
     }
-    return updated
+    return `${upsertFileMetaComment(updated, buildApiFileComment(moduleName)).trimEnd()}\n`
   }
 
   console.warn(
     `⚠️  ${relPath} 无 <generated> 标记，已自动迁移（自定义代码请写在 </generated> 下方）`
   )
-  return `${header}${generatedBlock}\n`
+  return `${buildApiFileComment(moduleName)}\n\n${header}${generatedBlock}\n`
 }
 
 /**
@@ -461,12 +532,10 @@ function generateEnumsGeneratedBody(definitions, schemaModuleMap = new Map()) {
     })
 
   const blocks = definitions.map((def) => {
-    const enumEntries = def.values
-      .map(value => `  ${value}: '${value}',`)
-      .join("\n")
+    const enumEntries = joinLines(def.values.map(value => `  ${value}: "${escapeDoubleQuoted(value)}"`))
 
     return `/** ${def.description} */
-export type ${def.typeName} = NonNullable<${def.schemaName}['${def.propName}']>
+export type ${def.typeName} = NonNullable<${def.schemaName}["${def.propName}"]>
 
 export const ${def.enumConstName} = {
 ${enumEntries}
@@ -484,12 +553,13 @@ ${enumEntries}
 /**
  * 合并带 <generated> 标记的常量文件：仅替换标记内内容，保留 </generated> 下方自定义代码
  */
-function mergeConstantsGeneratedFile({ relPath, existingContent, generatedBody, customHint }) {
+function mergeConstantsGeneratedFile({ relPath, existingContent, generatedBody, customHint, fileComment }) {
   const generatedBlock = `${GEN_START}\n${generatedBody.trim()}\n${GEN_END}`
+  const header = fileComment || "/** Auto-generated — do not edit manually */"
 
   if (!existingContent) {
     return [
-      "/** Auto-generated — do not edit manually */",
+      header,
       "",
       generatedBlock,
       "",
@@ -504,7 +574,6 @@ function mergeConstantsGeneratedFile({ relPath, existingContent, generatedBody, 
   )
 
   if (pattern.test(existingContent)) {
-    const header = existingContent.slice(0, existingContent.indexOf(GEN_START)).trimEnd()
     return `${header}\n\n${generatedBlock}${customSection}`
   }
 
@@ -512,7 +581,7 @@ function mergeConstantsGeneratedFile({ relPath, existingContent, generatedBody, 
     `⚠️  ${relPath} 无 <generated> 标记，已自动迁移（自定义代码请写在 </generated> 下方）`
   )
   return [
-    "/** Auto-generated — do not edit manually */",
+    header,
     "",
     generatedBlock,
     customSection || "\n"
@@ -525,7 +594,33 @@ function typeNameToOptionsConstName(typeName) {
   return `${snake}_OPTIONS`
 }
 
-/** 解析已有 options.ts 中各 OPTIONS 的 label（按 enum 成员名匹配，重新生成时保留） */
+/**
+ * 从 OpenAPI 描述里解析 VALUE(中文)，如 PENDING(待处理)、online_preview(在线预览)。
+ * 只填首次生成或当前 label 为空的项；已手改的非空中文按 value 保留。
+ */
+function parseEnumLabelsFromDescription(description, values) {
+  const labels = new Map()
+  if (!description || !values?.length) return labels
+
+  const re = /([A-Z][\w-]*)\s*[(（]([^)）]+)[)）]/gi
+  let match = re.exec(description)
+  while (match !== null) {
+    const rawKey = match[1]
+    const zh = match[2].trim()
+    const normalized = rawKey.replace(/-/g, "_").toUpperCase()
+    const value = values.find(item =>
+      item === rawKey
+      || item === normalized
+      || item.replace(/_/g, "") === normalized.replace(/_/g, "")
+    )
+    if (value && zh) labels.set(value, zh)
+    match = re.exec(description)
+  }
+
+  return labels
+}
+
+/** 解析已有 options.ts 中各 OPTIONS 的 label（按 enum 成员名匹配，重新生成时保留非空值） */
 function parseExistingOptionLabels(content) {
   const result = new Map()
   const block = content.includes(GEN_START) ? extractGeneratedSection(content) || content : content
@@ -536,17 +631,13 @@ function parseExistingOptionLabels(content) {
     const constName = match[1]
     const arrayBody = match[2]
     const valueLabels = new Map()
-    const itemRe = /\{\s*label:\s*('(?:\\'|[^'])*'|"")\s*,\s*value:\s*\w+\.(\w+)\s*\}/g
+    const itemRe = /\{\s*label:\s*(?:'((?:\\'|[^'])*)'|"((?:\\"|[^"])*)")\s*,\s*value:\s*\w+\.(\w+)\s*\}/g
     let item = itemRe.exec(arrayBody)
 
     while (item !== null) {
-      let label = item[1]
-      if (label.startsWith("'")) {
-        label = label.slice(1, -1).replace(/\\'/g, "'")
-      } else {
-        label = ""
-      }
-      valueLabels.set(item[2], label)
+      const raw = item[1] !== undefined ? item[1] : item[2]
+      const label = raw.replace(/\\'/g, "'").replace(/\\"/g, "\"")
+      valueLabels.set(item[3], label)
       item = itemRe.exec(arrayBody)
     }
 
@@ -557,10 +648,19 @@ function parseExistingOptionLabels(content) {
   return result
 }
 
+/** 转义双引号字符串字面量，对齐 ESLint style/quotes */
+function escapeDoubleQuoted(value) {
+  return String(value).replace(/\\/g, "\\\\").replace(/"/g, "\\\"")
+}
+
+/** 多行列表：中间项加逗号，最后一项不加（style/comma-dangle: never） */
+function joinLines(items) {
+  return items.map((item, index) => (index === items.length - 1 ? item : `${item},`)).join("\n")
+}
+
 /** 格式化 label 字面量（允许空字符串） */
 function formatLabelLiteral(label) {
-  if (!label) return "''"
-  return `'${label.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`
+  return `"${escapeDoubleQuoted(label || "")}"`
 }
 
 /** 生成 options.ts 中 <generated> 区域内的内容 */
@@ -571,12 +671,13 @@ function generateOptionsGeneratedBody(definitions, existingLabels) {
     const optionsConstName = typeNameToOptionsConstName(def.typeName)
     const preservedLabels = existingLabels.get(optionsConstName) || new Map()
 
-    const items = def.values
-      .map((value) => {
-        const label = preservedLabels.get(value) ?? ""
-        return `  { label: ${formatLabelLiteral(label)}, value: ${def.enumConstName}.${value} },`
-      })
-      .join("\n")
+    const inferredLabels = parseEnumLabelsFromDescription(def.description, def.values)
+
+    const items = joinLines(def.values.map((value) => {
+      const preserved = preservedLabels.get(value)
+      const label = (preserved && preserved.trim()) ? preserved : (inferredLabels.get(value) || "")
+      return `  { label: ${formatLabelLiteral(label)}, value: ${def.enumConstName}.${value} }`
+    }))
 
     return `/** ${def.description} */
 export const ${optionsConstName} = [
@@ -585,12 +686,12 @@ ${items}
   })
 
   return [
-    `import { ${enumImports.join(", ")} } from './enums'`,
+    `import { ${enumImports.join(", ")} } from "./enums"`,
     "",
     "/**",
     " * 下拉选择器选项",
     " * 用于 Select、Radio、Checkbox 等组件",
-    " * label 默认为空，可手填；重新生成 api 时会按 value 保留已有 label",
+    " * label 首次从 OpenAPI 描述解析中文；已有非空 label 按 value 保留，不会被重新生成覆盖",
     " */",
     "",
     blocks.join("\n\n"),
@@ -658,7 +759,8 @@ function writeOptionsFile(definitions) {
     relPath: "src/common/constants/options.ts",
     existingContent: existing,
     generatedBody,
-    customHint: "// 自定义选项请写在此下方，重新生成 api 时不会覆盖，并会自动合并到 registry.ts 的 Options"
+    customHint: "// 自定义选项请写在此下方，重新生成 api 时不会覆盖，并会自动合并到 registry.ts 的 Options",
+    fileComment: buildOptionsFileComment()
   })
   fs.writeFileSync(OPTIONS_FILE, content, "utf-8")
   console.log(`✅ 已生成常量: src/common/constants/options.ts (${definitions.length} 组选项)`)
@@ -690,17 +792,17 @@ function generateRegistryGeneratedBody(definitions, customOptionsExports = []) {
 
   const optionsImports = [...new Set(mergedOptions.map(item => item.constName))].sort()
 
-  const enumEntries = definitions
-    .map(def => `  ${typeNameToRegistryKey(def.typeName)}: ${def.enumConstName},`)
-    .join("\n")
+  const enumEntries = joinLines(
+    definitions.map(def => `  ${typeNameToRegistryKey(def.typeName)}: ${def.enumConstName}`)
+  )
 
-  const optionsEntries = mergedOptions
-    .map(item => `  ${item.registryKey}: ${item.constName},`)
-    .join("\n")
+  const optionsEntries = joinLines(
+    mergedOptions.map(item => `  ${item.registryKey}: ${item.constName}`)
+  )
 
   return [
-    `import { ${enumImports.join(", ")} } from './enums'`,
-    `import { ${optionsImports.join(", ")} } from './options'`,
+    `import { ${enumImports.join(", ")} } from "./enums"`,
+    `import { ${optionsImports.join(", ")} } from "./options"`,
     "",
     "/** 枚举聚合入口，用法：Enum.evaluationTaskStatus.PENDING */",
     "export const Enum = {",
@@ -729,7 +831,8 @@ function writeRegistryFile(definitions) {
     relPath: "src/common/constants/registry.ts",
     existingContent: existing,
     generatedBody,
-    customHint: "// 自定义聚合入口请写在此下方，重新生成 api 时不会覆盖"
+    customHint: "// 自定义聚合入口请写在此下方，重新生成 api 时不会覆盖",
+    fileComment: buildRegistryFileComment()
   })
   fs.writeFileSync(REGISTRY_FILE, content, "utf-8")
 
@@ -749,7 +852,8 @@ function writeEnumsFile(schemas, schemaModuleMap = new Map()) {
     relPath: "src/common/constants/enums.ts",
     existingContent: existing,
     generatedBody,
-    customHint: "// 自定义枚举 / 扩展请写在此下方，重新生成 api 时不会覆盖"
+    customHint: "// 自定义枚举 / 扩展请写在此下方，重新生成 api 时不会覆盖",
+    fileComment: buildEnumsFileComment()
   })
   fs.writeFileSync(ENUMS_FILE, content, "utf-8")
   console.log(`✅ 已生成常量: src/common/constants/enums.ts (${definitions.length} 个枚举)`)
@@ -770,7 +874,7 @@ function isResultWrapper(name) {
 
 /** 枚举值转 TS 联合类型 */
 function formatEnumUnion(values) {
-  return values.map(v => `'${v}'`).join(" | ")
+  return values.map(v => `"${escapeDoubleQuoted(v)}"`).join(" | ")
 }
 
 /**
@@ -1063,8 +1167,77 @@ function formatPropComment(description) {
   return ` /** ${description} */`
 }
 
+/**
+ * Java 泛型 PageQuerySo<T> 擦除后，OpenAPI 里往往只剩一个 PageQuerySo，
+ * entity 还会被收成错误类型（当前文档里是 UploadFile）。
+ * 同一模块若存在 PageXxx 分页结果，则把 entity 纠正为 Xxx。
+ */
+function inferPageQueryEntity(schemaNames, moduleName) {
+  const pageTypes = [...schemaNames].filter(name =>
+    name.startsWith("Page") && !name.startsWith("PageQuerySo")
+  )
+  if (pageTypes.length === 0) return null
+  if (pageTypes.length === 1) return pageTypes[0].slice("Page".length)
+
+  if (moduleName) {
+    const moduleEntity = kebabToPascalCase(moduleName)
+    const preferred = pageTypes.find(name =>
+      name === `Page${moduleEntity}` || name === `Page${moduleEntity}PageVo`
+    )
+    if (preferred) return preferred.slice("Page".length)
+  }
+
+  return null
+}
+
+/** 纠正 PageQuerySo.entity，并去掉仅被错误 entity 引用进来的类型。 */
+function specializePageQuerySo(schemaNames, schemas, moduleName) {
+  if (!schemaNames.has("PageQuerySo")) return
+
+  const entity = inferPageQueryEntity(schemaNames, moduleName)
+  if (!entity) return
+  schemaNames.add(entity)
+
+  const swaggerEntity = schemas.PageQuerySo?.properties?.entity?.$ref?.split("/")?.pop()
+  if (!swaggerEntity || swaggerEntity === entity || !schemaNames.has(swaggerEntity)) return
+
+  for (const name of schemaNames) {
+    if (name === swaggerEntity) continue
+
+    const schema = schemas[name]
+    if (!schema) continue
+
+    if (name === "PageQuerySo") {
+      const props = schema.properties || {}
+      for (const [propName, propConfig] of Object.entries(props)) {
+        if (propName === "entity") continue
+        const refs = new Set()
+        collectSchemaRefs(propConfig, schemas, refs)
+        if (refs.has(swaggerEntity)) return
+      }
+      continue
+    }
+
+    const refs = new Set()
+    collectSchemaRefs(schema, schemas, refs)
+    if (refs.has(swaggerEntity)) return
+  }
+
+  schemaNames.delete(swaggerEntity)
+}
+
+function resolvePageQueryEntityType(schemaName, schemaNames, moduleName, fallbackType) {
+  if (schemaName.startsWith("PageQuerySo") && schemaName.length > "PageQuerySo".length) {
+    return schemaName.slice("PageQuerySo".length)
+  }
+  if (schemaName === "PageQuerySo") {
+    return inferPageQueryEntity(schemaNames, moduleName) || fallbackType
+  }
+  return fallbackType
+}
+
 /** 生成单个 interface / type 定义 */
-function generateTypeDefinition(name, schema, schemas) {
+function generateTypeDefinition(name, schema, schemas, schemaNames, moduleName) {
   if (!schema) return ""
 
   if (schema.enum) {
@@ -1079,9 +1252,12 @@ function generateTypeDefinition(name, schema, schemas) {
   if (schema.properties) {
     for (const [propName, propConfig] of Object.entries(schema.properties)) {
       const optional = required.has(propName) ? "" : "?"
-      const propType = resolveTsType(propConfig, schemas)
+      let propType = resolveTsType(propConfig, schemas)
+      if (propName === "entity" && name.startsWith("PageQuerySo")) {
+        propType = resolvePageQueryEntityType(name, schemaNames, moduleName, propType)
+      }
       const propDesc = inferPropertyDescription(propName, propConfig, name)
-      lines.push(`  ${propName}${optional}: ${propType};${formatPropComment(propDesc)}`)
+      lines.push(`  ${propName}${optional}: ${propType}${formatPropComment(propDesc)}`)
     }
   }
 
@@ -1090,12 +1266,12 @@ function generateTypeDefinition(name, schema, schemas) {
 }
 
 /** 生成模块 types 文件内容 */
-function generateTypesFileContent(schemaNames, paramsInterfaces, schemas) {
-  const parts = ["/** Auto-generated — do not edit manually */", ""]
+function generateTypesFileContent(schemaNames, paramsInterfaces, schemas, moduleName) {
+  const parts = [buildTypesFileComment(moduleName), ""]
 
   const sortedNames = [...schemaNames].sort()
   sortedNames.forEach((name) => {
-    const def = generateTypeDefinition(name, schemas[name], schemas)
+    const def = generateTypeDefinition(name, schemas[name], schemas, schemaNames, moduleName)
     if (def) parts.push(def, "")
   })
 
@@ -1146,7 +1322,7 @@ function generateParamsInterface(funcName, queryParams, schemas, summary) {
       { description: param.description },
       interfaceName
     )
-    lines.push(`  ${param.name}${optional}: ${propType};${formatPropComment(propDesc)}`)
+    lines.push(`  ${param.name}${optional}: ${propType}${formatPropComment(propDesc)}`)
   })
 
   lines.push("}")
@@ -1296,6 +1472,8 @@ async function main() {
       return
     }
 
+    specializePageQuerySo(mod.schemaNames, schemas, moduleName)
+
     mod.schemaNames.forEach((schemaName) => {
       if (!schemaModuleMap.has(schemaName)) {
         schemaModuleMap.set(schemaName, moduleName)
@@ -1310,7 +1488,8 @@ async function main() {
     const typesContent = generateTypesFileContent(
       mod.schemaNames,
       paramsInterfaces,
-      schemas
+      schemas,
+      moduleName
     )
     fs.writeFileSync(typesFilePath, typesContent, "utf-8")
     console.log(`✅ 已生成类型: src/common/apis/types/${moduleName}.ts`)

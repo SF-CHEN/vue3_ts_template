@@ -5,7 +5,6 @@ import type { ArticleFormData, ArticleItem, ArticleQuery } from "@@/apis/types/d
 import { createArticle, deleteArticle, fetchArticlePage, updateArticle } from "@@/apis/demo-article"
 import CustomDialog from "@@/components/CustomDialog/index.vue"
 import CustomTable from "@@/components/CustomTable/index.vue"
-import { checkPermission } from "@@/utils/permission"
 import { useUserStore } from "@/pinia/stores/user"
 
 defineOptions({ name: "DemoArticle" })
@@ -22,7 +21,7 @@ const query = reactive<ArticleQuery>({
   status: ""
 })
 
-const pagination = reactive<TablePagination>({
+const pagination = ref<TablePagination>({
   pageCurrent: 1,
   pageSize: 10,
   total: 0
@@ -43,11 +42,7 @@ const formRules = {
   status: [{ required: true, message: "请选择状态", trigger: "change" }]
 }
 
-const canCreate = computed(() => checkPermission(["demo:article:create"]))
-const canEdit = computed(() => checkPermission(["demo:article:edit"]))
-const canDelete = computed(() => checkPermission(["demo:article:delete"]))
-
-const columns: TableColumn<ArticleItem>[] = [
+const columns: TableColumn[] = [
   { prop: "id", label: "ID", width: 80 },
   { prop: "title", label: "标题", minWidth: 180 },
   { prop: "author", label: "作者", width: 120 },
@@ -59,20 +54,22 @@ const columns: TableColumn<ArticleItem>[] = [
 async function getTableData() {
   loading.value = true
   try {
+    // 查询条件保持原对象，分页参数单独提交，便于分页组件复用同一查询逻辑。
     const res = await fetchArticlePage({
-      pageCurrent: pagination.pageCurrent ?? 1,
-      pageSize: pagination.pageSize ?? 10,
+      pageCurrent: pagination.value.pageCurrent,
+      pageSize: pagination.value.pageSize,
       query: { ...query }
     })
     tableData.value = res.records
-    pagination.total = res.total
+    pagination.value.total = res.total
   } finally {
     loading.value = false
   }
 }
 
 function handleSearch() {
-  pagination.pageCurrent = 1
+  // 查询条件变化后回到第一页，避免旧页码超出新的结果范围。
+  pagination.value.pageCurrent = 1
   getTableData()
 }
 
@@ -88,11 +85,13 @@ function resetForm() {
 
 function handleCreate() {
   resetForm()
+  // 新增文章默认带入当前登录人，减少重复输入，同时仍允许用户修改。
   formData.author = userStore.username || "anonymous"
   dialogVisible.value = true
 }
 
 function handleUpdate(row: ArticleItem) {
+  // 只复制编辑表单需要的字段，避免把列表展示字段意外提交给后端。
   Object.assign(formData, {
     id: row.id,
     title: row.title,
@@ -113,6 +112,7 @@ async function handleSubmit() {
 
   loading.value = true
   try {
+    // 是否存在 id 作为新增/编辑的唯一分支条件，避免再维护额外模式状态。
     if (formData.id === undefined) {
       await createArticle({ ...formData })
       ElMessage.success("新增成功")
@@ -131,6 +131,7 @@ async function handleSubmit() {
 
 async function handleDelete(row: ArticleItem) {
   try {
+    // 删除属于不可逆操作，先在页面层完成明确确认再调用接口。
     await ElMessageBox.confirm(`确认删除「${row.title}」吗？`, "系统提示", {
       confirmButtonText: "确定",
       cancelButtonText: "取消",
@@ -180,16 +181,9 @@ onMounted(getTableData)
     </el-card>
 
     <div class="toolbar">
-      <el-button v-if="canCreate" type="primary" @click="handleCreate">
+      <el-button type="primary" @click="handleCreate">
         新增文章
       </el-button>
-      <el-alert
-        v-else
-        type="info"
-        :closable="false"
-        title="当前账号无新增权限（user 角色仅演示只读+有限权限）"
-        show-icon
-      />
     </div>
 
     <CustomTable
@@ -206,10 +200,10 @@ onMounted(getTableData)
       </template>
 
       <template #actions="{ row }">
-        <el-button v-if="canEdit" type="warning" plain size="small" @click="handleUpdate(row)">
+        <el-button type="warning" plain size="small" @click="handleUpdate(row)">
           编辑
         </el-button>
-        <el-button v-if="canDelete" type="danger" plain size="small" @click="handleDelete(row)">
+        <el-button type="danger" plain size="small" @click="handleDelete(row)">
           删除
         </el-button>
       </template>

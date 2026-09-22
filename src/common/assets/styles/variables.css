@@ -1,89 +1,75 @@
 /* 全局 CSS 变量，这种变量不仅可以在 CSS 和 SCSS 中使用，还可以导入到 JS 中使用 */
 
 :root {
-  /* 业务品牌色（与旧项目 src/style/index.less 一致） */
-  --app-primary: #2c5282;
-  --app-primary-hover: #1a365d;
-  --app-primary-light: #e8eef6;
-  --app-secondary: #34495e;
-  --app-accent: #3b82f6;
-  --app-dark: #1a1a2e;
-  --app-page-bg: #f5f6f8;
-  --app-bg-section: #f9fafb;
-  --app-text: #374151;
-  --app-border: #e5e7eb;
-  --app-border-light: #f0f0f0;
-  --app-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --app-radius: 4px;
+  /* 品牌与基础色 */
+  --app-primary: #2563eb;
+  --app-primary-hover: #1d4ed8;
+  --app-primary-light: #eff6ff;
+  --app-secondary: #475569;
+  --app-accent: #2563eb;
+  --app-dark: #0f172a;
+  --app-page-bg: #f5f7fb;
+  --app-surface: #ffffff;
+  --app-bg-section: #f8fafc;
+  --app-text: #334155;
+  --app-text-secondary: #64748b;
+  --app-border: #e2e8f0;
+  --app-border-light: #edf2f7;
+  --app-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+  --app-shadow-soft: 0 2px 12px rgba(15, 23, 42, 0.05);
+  --app-radius: 12px;
   --app-transition: all 0.2s ease;
+
+  /* Element Plus */
+  --el-color-primary: var(--app-primary);
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
 
   /* Body */
   --v3-body-text-color: var(--app-text);
   --v3-body-bg-color: var(--app-page-bg);
+
   /* Header 区域 = NavigationBar 组件 + TagsView 组件 */
   --v3-header-height: calc(
     var(--v3-navigationbar-height) + var(--v3-tagsview-height) + var(--v3-header-border-bottom-width)
   );
-  --v3-header-bg-color: var(--app-page-bg);
-  --v3-header-box-shadow: none;
-  --v3-header-border-bottom-width: 0px;
-  --v3-header-border-bottom: none;
-  /* NavigationBar 组件（顶栏：padding 18+12 + 头像 40 ≈ 70） */
-  --v3-navigationbar-height: 70px;
+  --v3-header-bg-color: rgba(255, 255, 255, 0.96);
+  --v3-header-box-shadow: 0 1px 0 rgba(148, 163, 184, 0.16);
+  --v3-header-border-bottom-width: 1px;
+  --v3-header-border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+
+  /* NavigationBar 组件 */
+  --v3-navigationbar-height: 64px;
   --v3-navigationbar-text-color: var(--app-dark);
+
   /* Sidebar 组件 */
-  --v3-sidebar-width: 260px;
-  --v3-sidebar-hide-width: 64px;
+  --v3-sidebar-width: 248px;
+  --v3-sidebar-hide-width: 72px;
   --v3-sidebar-border-right: none;
-  /* 非左侧布局兜底；左侧模式由侧栏样式按旧项目 padding 撑开 */
-  --v3-sidebar-menu-item-height: 50px;
-  --v3-sidebar-menu-tip-line-bg-color: var(--app-accent);
+  --v3-sidebar-menu-item-height: 44px;
+  --v3-sidebar-menu-tip-line-bg-color: var(--app-primary);
   --v3-sidebar-menu-bg-color: transparent;
-  --v3-sidebar-menu-hover-bg-color: rgba(255, 255, 255, 0.1);
-  --v3-sidebar-menu-text-color: #ffffff;
+  --v3-sidebar-menu-hover-bg-color: rgba(255, 255, 255, 0.08);
+  --v3-sidebar-menu-text-color: #cbd5e1;
   --v3-sidebar-menu-active-text-color: #ffffff;
+
   /* TagsView 组件 */
-  --v3-tagsview-height: 34px;
-  --v3-tagsview-text-color: var(--el-text-color-regular);
-  --v3-tagsview-tag-active-text-color: #ffffff;
-  --v3-tagsview-tag-bg-color: var(--el-bg-color);
-  --v3-tagsview-tag-active-bg-color: var(--el-color-primary);
-  --v3-tagsview-tag-border-radius: 2px;
-  --v3-tagsview-tag-border-color: var(--el-border-color-lighter);
-  --v3-tagsview-tag-active-border-color: var(--el-color-primary);
-  --v3-tagsview-tag-icon-hover-bg-color: #00000030;
-  --v3-tagsview-tag-icon-hover-color: #ffffff;
-  --v3-tagsview-contextmenu-text-color: var(--el-text-color-regular);
-  --v3-tagsview-contextmenu-hover-text-color: var(--el-text-color-primary);
-  --v3-tagsview-contextmenu-bg-color: var(--el-bg-color-overlay);
-  --v3-tagsview-contextmenu-hover-bg-color: var(--el-fill-color);
-  --v3-tagsview-contextmenu-box-shadow: var(--el-box-shadow);
+  --v3-tagsview-height: 36px;
+  --v3-tagsview-text-color: var(--app-text-secondary);
+  --v3-tagsview-tag-active-text-color: var(--app-primary);
+  --v3-tagsview-tag-bg-color: transparent;
+  --v3-tagsview-tag-active-bg-color: var(--app-primary-light);
+  --v3-tagsview-tag-border-radius: 7px;
+  --v3-tagsview-tag-border-color: transparent;
+  --v3-tagsview-tag-active-border-color: #bfdbfe;
+  --v3-tagsview-tag-icon-hover-bg-color: rgba(37, 99, 235, 0.1);
+  --v3-tagsview-tag-icon-hover-color: var(--app-primary);
+  --v3-tagsview-contextmenu-text-color: var(--app-text);
+  --v3-tagsview-contextmenu-hover-text-color: var(--app-primary);
+  --v3-tagsview-contextmenu-bg-color: #ffffff;
+  --v3-tagsview-contextmenu-hover-bg-color: var(--app-primary-light);
+  --v3-tagsview-contextmenu-box-shadow: var(--app-shadow);
+
   /* Hamburger 组件 */
-  --v3-hamburger-text-color: var(--el-text-color-primary);
-  /* RightPanel 组件  */
-  --v3-rightpanel-button-bg-color: var(--app-dark);
-}
-
-/* 内容区放大时，将不需要的组件隐藏 */
-body.content-large {
-  /* Header 区域 = TagsView 组件 */
-  --v3-header-height: var(--v3-tagsview-height);
-  /* NavigationBar 组件 */
-  --v3-navigationbar-height: 0px;
-  /* Sidebar 组件 */
-  --v3-sidebar-width: 0px;
-  --v3-sidebar-hide-width: 0px;
-}
-
-/* 内容区全屏时，将不需要的组件隐藏 */
-body.content-full {
-  /* Header 区域 */
-  --v3-header-height: 0px;
-  /* NavigationBar 组件 */
-  --v3-navigationbar-height: 0px;
-  /* Sidebar 组件 */
-  --v3-sidebar-width: 0px;
-  --v3-sidebar-hide-width: 0px;
-  /* TagsView 组件 */
-  --v3-tagsview-height: 0px;
+  --v3-hamburger-text-color: var(--app-secondary);
 }

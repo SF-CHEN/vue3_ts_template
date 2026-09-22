@@ -21,7 +21,7 @@ pnpm build
 
 ## AI 开发约定
 
-开始编码前先阅读 `AGENTS.md`。
+开始编码前先阅读 `AGENTS.md`。代码书写形态（引号、逗号、Vue 模板换行等）见 `docs/CODE_STYLE.md`。
 
 项目 Skill 设计与使用方式见 `docs/AI_SKILLS.md`，当前只保留页面、接口、路由、Store、图标 5 类高频工作流 Skill。
 
@@ -63,5 +63,6 @@ pnpm api:generate
 ```
 
 生成代码位于 `src/common/apis`、`src/common/apis/types` 和相关 constants 文件。
+`<generated>`、`@keep` 和 options 中文 label 的约定见 `docs/API_GENERATE.md`。
 
 `request<T>()` 直接返回业务数据；FormData、Blob 等特殊请求也继续复用同一个 request 层。

@@ -7,8 +7,8 @@
 ### Changed
 
 - 强化 AI 开发约束：最小修改、先找相似实现、避免提前抽象，并以 ESLint / TypeScript / Test / Build 作为质量门槛。
-- 普通 CRUD 默认使用 Element Plus + `CustomTable` + slot；`CustomForm` 仅用于明确的 schema / 动态表单。
-- `CustomForm` 删除运行时字段 registry，固定内置字段通过直接映射管理，额外字段使用 slot。
+- 普通 CRUD 默认使用 Element Plus + `CustomTable` + slot，弹窗用 `CustomDialog`。
+- 删除未使用的 `CustomForm` 及表格/分页多余封装，分页直接内置在 `CustomTable`。
 - HTTP 请求层直接返回业务 `data`，手写 API 与 Swagger 生成 API 使用一致的 `request<T>()` 契约。
 - 布局功能改为 `src/layouts/config.ts` 静态配置，删除运行时 Settings Drawer / Settings Store。
 - 初始化脚本由 PowerShell 改为跨平台 Node.js 脚本。
@@ -18,7 +18,7 @@
 ### Removed
 
 - 未使用的插件安装层、`v-permission`、Settings 相关组件与 Store。
-- 未使用的工具函数、类型中间层、CustomForm registry 和部分冗余依赖。
+- 未使用的工具函数、类型中间层、`CustomForm` 和部分冗余依赖。
 
 ### Validation
 

@@ -1,208 +1,103 @@
 <script setup lang="ts" generic="T extends object">
-import type { TableInstance } from "element-plus"
-import type { TableColumn, TablePagination, TablePaginationKeys } from "./types"
-import { computed, nextTick, useAttrs, useTemplateRef } from "vue"
-import CustomPagination from "../CustomPagination/index.vue"
-import { normalizeColumns, pickColumnProps, useVisibleColumns } from "./composables/useColumns"
-import { useTablePagination } from "./composables/useTablePagination"
+import type { TableColumn, TablePagination } from "./types"
 
 defineOptions({
   name: "CustomTable",
   inheritAttrs: false
 })
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   data?: T[]
-  columns: TableColumn<T>[]
-  pagination?: TablePagination
-  paginationKeys?: TablePaginationKeys
-  pageConfig?: Record<string, unknown>
-  showPagination?: boolean
+  columns: TableColumn[]
   loading?: boolean
-  showTip?: boolean
-  emptyText?: string
-  emptyDescription?: string
   rowKey?: string
-  selection?: boolean
-  showId?: boolean
-  indexLabel?: string
-  disabledId?: Array<string | number>
 }>(), {
   data: () => [],
-  showPagination: true,
   loading: false,
-  showTip: true,
-  emptyText: "-",
-  emptyDescription: "暂无列配置",
-  rowKey: "id",
-  selection: false,
-  showId: false,
-  indexLabel: "序号",
-  disabledId: () => [],
-  pageConfig: () => ({})
+  rowKey: "id"
 })
 
 const emit = defineEmits<{
-  "pagination": [payload: TablePagination]
-  "update:pagination": [payload: TablePagination]
-  "sortChange": [payload: unknown]
+  pagination: []
 }>()
 
 defineSlots<{
   [name: string]: (props: {
     row: T
-    column: TableColumn<T>
+    column: TableColumn
     value: unknown
     index: number
   }) => unknown
 }>()
 
-const attrs = useAttrs()
-const tableAttrs = computed(() =>
-  Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "selection"))
-)
+const pagination = defineModel<TablePagination>("pagination", { required: true })
 
-const showSelection = computed(() => props.selection || Boolean(attrs.selection))
-const dataColumns = useVisibleColumns(() => props.columns)
-const normalizedColumns = computed(() =>
-  normalizeColumns(dataColumns.value, {
-    showIndex: props.showId,
-    showSelection: showSelection.value,
-    indexLabel: props.indexLabel
-  })
-)
+const currentPage = computed({
+  get: () => pagination.value.pageCurrent,
+  set: (pageCurrent: number) => {
+    pagination.value = { ...pagination.value, pageCurrent }
+    emit("pagination")
+  }
+})
 
-const { page, size, total, onPagination } = useTablePagination(
-  props,
-  emit as (event: string, payload: TablePagination) => void
-)
-const tableRef = useTemplateRef<TableInstance>("tableRef")
+const pageSize = computed({
+  get: () => pagination.value.pageSize,
+  set: (size: number) => {
+    pagination.value = { ...pagination.value, pageSize: size }
+    emit("pagination")
+  }
+})
 
-function columnKey(column: TableColumn<T>) {
-  return column.prop || column.type || column.label || ""
-}
-
-function toTableRow(row: unknown) {
-  return row as T
-}
-
-function getCellValue(row: unknown, prop?: string) {
+function cellValue(row: unknown, prop?: string) {
   if (!prop || !row || typeof row !== "object") return undefined
   return (row as Record<string, unknown>)[prop]
 }
 
-function getDisplayValue(row: unknown, column: TableColumn<T>) {
-  const tableRow = toTableRow(row)
-  const value = getCellValue(tableRow, column.prop)
-  return column.formatter ? column.formatter(value, tableRow, column) : (value ?? props.emptyText)
+function toRow(row: unknown) {
+  return row as T
 }
-
-function resolveColumnBind(column: TableColumn<T>) {
-  if (column.type === "selection") {
-    return {
-      type: "selection" as const,
-      reserveSelection: column.reserveSelection ?? true,
-      selectable: (row: unknown) => {
-        const id = getCellValue(row, props.rowKey)
-        return !props.disabledId.includes(id as string | number)
-      },
-      fixed: column.fixed,
-      width: column.width || 50
-    }
-  }
-
-  if (column.type === "index") {
-    return {
-      label: column.label || props.indexLabel,
-      width: column.width || 80,
-      fixed: column.fixed
-    }
-  }
-
-  return pickColumnProps(column)
-}
-
-function resolveShowTip(column: TableColumn<T>) {
-  if (column.showTip !== undefined) return column.showTip
-  if (column.type || column.slot) return false
-  return props.showTip
-}
-
-function onSortChange(payload: unknown) {
-  emit("sortChange", payload)
-}
-
-function toggleRowSelection(row: T, selected?: boolean) {
-  nextTick(() => {
-    tableRef.value?.toggleRowSelection(row, selected)
-  })
-}
-
-function toggleAllSelection() {
-  nextTick(() => {
-    tableRef.value?.toggleAllSelection()
-  })
-}
-
-function clearSelection() {
-  nextTick(() => {
-    tableRef.value?.clearSelection()
-  })
-}
-
-defineExpose({
-  tableRef,
-  toggleRowSelection,
-  toggleAllSelection,
-  clearSelection
-})
 </script>
 
 <template>
   <div class="custom-table">
     <el-table
-      v-if="normalizedColumns.length"
-      ref="tableRef"
       v-loading="loading"
       :data="data"
       :row-key="rowKey"
-      :show-overflow-tooltip="showTip"
-      v-bind="tableAttrs"
-      @sort-change="onSortChange"
+      v-bind="$attrs"
     >
       <el-table-column
-        v-for="column in normalizedColumns"
-        :key="columnKey(column)"
-        v-bind="resolveColumnBind(column)"
-        :show-overflow-tooltip="resolveShowTip(column)"
+        v-for="column in columns"
+        :key="column.prop || column.label"
+        :prop="column.prop"
+        :label="column.label"
+        :width="column.width"
+        :min-width="column.minWidth"
+        :fixed="column.fixed"
       >
-        <template v-if="column.type === 'index'" #default="scope">
-          {{ scope.$index + 1 + (page - 1) * size }}
-        </template>
-
-        <template v-else-if="column.type !== 'selection'" #default="scope">
+        <template #default="{ row, $index }">
           <slot
             :name="column.slot || column.prop"
-            :row="toTableRow(scope.row)"
+            :row="toRow(row)"
             :column="column"
-            :value="getCellValue(scope.row, column.prop)"
-            :index="scope.$index"
+            :value="cellValue(row, column.prop)"
+            :index="$index"
           >
-            {{ getDisplayValue(scope.row, column) }}
+            {{ cellValue(row, column.prop) ?? "-" }}
           </slot>
         </template>
       </el-table-column>
     </el-table>
 
-    <el-empty v-else :description="emptyDescription" />
-
-    <CustomPagination
-      v-if="showPagination && total > 0"
-      v-model:page="page"
-      v-model:size="size"
-      :total="total"
-      v-bind="pageConfig"
-      @pagination="onPagination"
+    <el-pagination
+      v-if="pagination.total > 0"
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
+      class="custom-table__pager"
+      :total="pagination.total"
+      :page-sizes="[10, 20, 30, 50]"
+      layout="total, sizes, prev, pager, next, jumper"
+      background
     />
   </div>
 </template>
@@ -210,8 +105,12 @@ defineExpose({
 <style lang="scss" scoped>
 .custom-table {
   width: 100%;
-  max-width: 100%;
-  min-width: 0;
   overflow-x: auto;
+}
+
+.custom-table__pager {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
 }
 </style>
